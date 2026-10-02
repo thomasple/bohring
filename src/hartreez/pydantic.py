@@ -1,0 +1,91 @@
+"""Pydantic v2 integration for unit-annotated model input.
+
+Import this module explicitly to use :class:`UnitAwareModel`; the core
+``hartreez`` namespace remains independent of Pydantic.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any, cast
+
+from pydantic import BaseModel, ValidationInfo, model_validator
+
+from hartreez.errors import MappingConversionError, ReferenceUnitsError
+from hartreez.mapping import normalize_mapping_level, parse_reference_units
+from hartreez.metadata import UnitDimension
+from hartreez.systems import UnitSystem
+
+
+def _pointer_token(value: str) -> str:
+    return value.replace("~", "~0").replace("/", "~1")
+
+
+class UnitAwareModel(BaseModel):
+    """Base model that converts unit-annotated keys before field validation.
+
+    Supply the selected system through Pydantic's validation context, for
+    example ``Model.model_validate(data, context={"unit_system": au})``.
+    Annotated values are converted into that system before field types,
+    constraints, and application validators run. The validator normalizes
+    only this model's mapping level; nested models receive their own input and
+    reuse Pydantic's validation context.
+
+    ``UnitDimension`` metadata is translated into ``reference_units`` checks,
+    so the annotation's unit expression selects dimensions but never an output
+    scale. Canonical input without unit suffixes can be validated without a
+    context.
+    """
+
+    @model_validator(mode="before")
+    @classmethod
+    def _normalize_unit_input(cls, data: Any, info: ValidationInfo) -> Any:
+        if not isinstance(data, Mapping):
+            return data
+
+        # The shared mapping boundary owns suffix parsing, collision handling,
+        # dimensional checks, and conversion. Do not recurse: nested models
+        # need to process their own mapping level.
+        raw_mapping = cast(Mapping[Any, Any], data)
+        contains_annotation = any(
+            isinstance(key, str) and ("[" in key or "]" in key) for key in raw_mapping
+        )
+        if not contains_annotation:
+            return raw_mapping
+
+        context: Any = info.context
+        system: Any = None
+        if isinstance(context, UnitSystem):
+            system = context
+        elif isinstance(context, Mapping):
+            context_mapping = cast(Mapping[str, Any], context)
+            system = context_mapping.get("unit_system")
+        if not isinstance(system, UnitSystem):
+            raise ValueError(
+                "unit-annotated input requires a UnitSystem in validation context "
+                "(context={'unit_system': system})"
+            )
+
+        reference_units: dict[str, str] = {}
+        for name, model_field in cls.model_fields.items():
+            for metadata in model_field.metadata:
+                if isinstance(metadata, UnitDimension):
+                    reference_units[f"/{_pointer_token(name)}"] = metadata.expression
+                    break
+
+        try:
+            references = parse_reference_units(reference_units)
+            return normalize_mapping_level(
+                raw_mapping,
+                system,
+                "$",
+                recurse=False,
+                references=references,
+            )
+        except (MappingConversionError, ReferenceUnitsError) as exc:
+            # A ValueError from a before validator is represented as a normal
+            # Pydantic ValidationError at the model's input location.
+            raise ValueError(str(exc)) from exc
+
+
+__all__ = ["UnitAwareModel"]

@@ -20,6 +20,7 @@ from hartreez.errors import (
     UnknownUnitError,
 )
 from hartreez.mapping import convert_mapping
+from hartreez.metadata import UnitDimension
 from hartreez.parser import parse_unit
 from hartreez.systems import UnitSystem, au
 from hartreez.units import Unit, canonical_unit_names, unit_aliases, unit_names
@@ -59,6 +60,7 @@ __all__ = [
     "MappingConversionError",
     "ReferenceUnitsError",
     "Unit",
+    "UnitDimension",
     "UnitError",
     "UnitSyntaxError",
     "UnitSystem",
