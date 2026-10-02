@@ -1,9 +1,10 @@
 # Unit vocabulary and reference constants
 
-`hartreez` uses an explicit, case-sensitive registry. Every spelling below is
-registered directly; prefixes are never inferred. `parse_unit()` accepts
-these names in products and quotients, so expressions such as `kcal/mol`,
-`eV/angstrom`, and `Da*angstrom/ps` need no extra registrations.
+`hartreez` uses an explicit, case-sensitive registry; prefixes are never
+inferred. `parse_unit()` accepts registered names in products and quotients,
+so expressions such as `kcal/mol`, `eV/angstrom`, and `Da*angstrom/ps` need no
+extra registrations. Composite aliases resolve to the same `Unit` value as
+their expression without becoming canonical unit names.
 
 ## Unit expressions and direct conversion
 
@@ -46,7 +47,7 @@ explicit aliases and have the same scale and dimensions.
 | Elementary charge | `e` | `elementary_charge` | Exact SI defining value `1.602176634e-19 C` |
 | Temperature | `K` | `kelvin` | SI kelvin |
 | Energy | `J` | `joule` | SI joule |
-| Electronvolt | `eV` | `electronvolt` | Exact `e joule` |
+| Electronvolt | `eV` | `electronvolt`, `ev` | Exact `e joule` |
 | Millielectronvolt | `meV` | — | Exactly `1e-3 eV` |
 | Hartree | `Hartree` | `Hartree_energy`, `Ha` | CODATA 2022 `E_h`, derived as `alpha^2 m_e c^2` |
 | Rydberg | `Rydberg` | `Ry` | Exactly one half Hartree |
@@ -61,6 +62,7 @@ explicit aliases and have the same scale and dimensions.
 | Dipole | `D` | `debye` | `1e-21/c C m` under the Debye definition |
 | Mole count | `mol` | — | Dimensionless scale `N_A = 6.02214076e23` |
 | Time convenience | `min`, `h` | — | Exactly 60 and 3600 seconds |
+| Molar energy expressions | — | `kcalpermol` → `kcal/mol`, `kJpermol` → `kJ/mol` | Aliases for ordinary parsed expressions; neither expression is a canonical unit |
 
 An unlisted spelling such as `kPa`, `angstroms`, or `EV` raises
 `UnknownUnitError`. Names preserve case. No runtime registration is available.
