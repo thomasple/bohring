@@ -23,3 +23,7 @@ class UnitSystemError(UnitError):
 
 class MappingConversionError(UnitError):
     """A unit-annotated mapping could not be normalized or converted."""
+
+
+class ReferenceUnitsError(UnitError):
+    """A ``reference_units`` mapping contains an invalid definition."""

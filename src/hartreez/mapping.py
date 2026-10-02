@@ -5,9 +5,62 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, cast, overload
 
-from hartreez.errors import MappingConversionError, UnitError
+from hartreez.errors import MappingConversionError, ReferenceUnitsError, UnitError
 from hartreez.parser import parse_unit
 from hartreez.systems import UnitSystem
+from hartreez.units import Unit
+
+
+_Reference = tuple[str, Unit]
+
+
+def _pointer_child(path: str, component: object) -> str:
+    """Extend an RFC 6901 JSON Pointer with one string or array-index token."""
+
+    escaped = str(component).replace("~", "~0").replace("/", "~1")
+    return f"{path}/{escaped}"
+
+
+def _parse_reference_units(reference_units: Mapping[str, str] | None) -> dict[str, _Reference]:
+    """Parse and validate the complete schema before inspecting input values."""
+
+    raw: Any = reference_units
+    if raw is None:
+        return {}
+    if not isinstance(raw, Mapping):
+        raise ReferenceUnitsError("reference_units must be a mapping of JSON Pointer paths to unit expressions")
+
+    parsed: dict[str, _Reference] = {}
+    for path, expression in cast(Mapping[Any, Any], raw).items():
+        if not isinstance(path, str) or not path.startswith("/"):
+            raise ReferenceUnitsError(
+                f"invalid reference path {path!r}; expected an absolute JSON Pointer such as '/dt'"
+            )
+        # JSON Pointer permits only these two escapes. Reject malformed paths
+        # early so a typo cannot silently leave a field without validation.
+        index = 0
+        while index < len(path):
+            if path[index] == "~":
+                if path[index : index + 2] not in ("~0", "~1"):
+                    raise ReferenceUnitsError(f"invalid JSON Pointer escape in reference path {path!r}")
+                index += 2
+            else:
+                index += 1
+        if not isinstance(expression, str):
+            raise ReferenceUnitsError(
+                f"invalid reference definition at {path}: expected a unit expression string, "
+                f"got {type(expression).__name__}"
+            )
+        try:
+            unit = parse_unit(expression)
+        except (UnitError, TypeError) as exc:
+            raise ReferenceUnitsError(
+                f"invalid reference unit expression {expression!r} at {path}: {exc}"
+            ) from exc
+        if path in parsed:
+            raise ReferenceUnitsError(f"duplicate reference path {path!r}")
+        parsed[path] = (expression, unit)
+    return parsed
 
 
 def _path_child(path: str, key: object) -> str:
@@ -90,6 +143,8 @@ def _normalize_mapping_level(
     path: str,
     *,
     recurse: bool,
+    references: Mapping[str, _Reference] | None = None,
+    pointer: str = "",
 ) -> dict[Any, Any]:
     """Normalize one mapping level; ``recurse`` is a seam for shallow clients."""
 
@@ -114,6 +169,7 @@ def _normalize_mapping_level(
     normalized: dict[Any, Any] = {}
     for canonical, value, original_path, expression, original_key in entries:
         target_path = _path_child(path, canonical)
+        target_pointer = _pointer_child(pointer, canonical)
         if expression is not None:
             if original_key is None:
                 raise RuntimeError("annotated mapping entry has no original key")
@@ -124,6 +180,15 @@ def _normalize_mapping_level(
                     f"invalid unit expression {expression!r} in key {original_key!r} "
                     f"at {original_path}: {exc}"
                 ) from exc
+            reference = references.get(target_pointer) if references is not None else None
+            if reference is not None:
+                reference_expression, reference_unit = reference
+                if unit.dimensions != reference_unit.dimensions:
+                    raise MappingConversionError(
+                        f"dimensional mismatch at normalized path {target_pointer}: supplied unit "
+                        f"{expression!r} has dimensions {unit.dimensions}, but reference unit "
+                        f"{reference_expression!r} has dimensions {reference_unit.dimensions}"
+                    )
             try:
                 factor = system.factor_from(unit)
             except Exception as exc:
@@ -133,39 +198,52 @@ def _normalize_mapping_level(
                 ) from exc
             normalized[canonical] = _scale_value(value, factor, target_path, original_key)
         elif recurse:
-            normalized[canonical] = _normalize_unannotated(value, system, target_path)
+            normalized[canonical] = _normalize_unannotated(
+                value, system, target_path, references, target_pointer
+            )
         else:
             normalized[canonical] = value
     return normalized
 
 
-def _normalize_unannotated(value: Any, system: UnitSystem, path: str) -> Any:
+def _normalize_unannotated(
+    value: Any,
+    system: UnitSystem,
+    path: str,
+    references: Mapping[str, _Reference] | None,
+    pointer: str,
+) -> Any:
     if isinstance(value, Mapping):
-        return _normalize_mapping_level(cast(Mapping[Any, Any], value), system, path, recurse=True)
+        return _normalize_mapping_level(
+            cast(Mapping[Any, Any], value), system, path, recurse=True,
+            references=references, pointer=pointer
+        )
     if isinstance(value, list):
         items = cast(list[Any], value)
         return [
-            _normalize_unannotated(item, system, f"{path}[{index}]")
+            _normalize_unannotated(item, system, f"{path}[{index}]", references, _pointer_child(pointer, index))
             for index, item in enumerate(items)
         ]
     if isinstance(value, tuple):
         items = cast(tuple[Any, ...], value)
         return tuple(
-            _normalize_unannotated(item, system, f"{path}[{index}]")
+            _normalize_unannotated(item, system, f"{path}[{index}]", references, _pointer_child(pointer, index))
             for index, item in enumerate(items)
         )
     return value
 
 
 @overload
-def convert_mapping(mapping: Mapping[Any, Any], system: UnitSystem) -> dict[Any, Any]: ...
+def convert_mapping(
+    mapping: Mapping[Any, Any], system: UnitSystem, *, reference_units: Mapping[str, str] | None = None
+) -> dict[Any, Any]: ...
 
 
 @overload
-def convert_mapping(mapping: Any, system: Any) -> dict[Any, Any]: ...
+def convert_mapping(mapping: Any, system: Any, *, reference_units: Any = None) -> dict[Any, Any]: ...
 
 
-def convert_mapping(mapping: Any, system: Any) -> dict[Any, Any]:
+def convert_mapping(mapping: Any, system: Any, *, reference_units: Any = None) -> dict[Any, Any]:
     """Return a new mapping with annotated values converted into ``system``.
 
     String keys ending in ``[unit expression]`` are converted and returned
@@ -176,10 +254,17 @@ def convert_mapping(mapping: Any, system: Any) -> dict[Any, Any]:
     Annotated lists and tuples are scaled recursively. Other scalar or
     array-like values are passed through ``value * float_factor`` so numerical
     frameworks can participate without becoming dependencies of this package.
+
+    ``reference_units`` optionally maps normalized JSON Pointer paths (for
+    example ``{"/simulation/dt": "fs"}``) to expected dimensions. References
+    are validation-only; annotated values are still converted into ``system``.
     """
 
     if not isinstance(mapping, Mapping):
         raise TypeError("mapping must implement collections.abc.Mapping")
     if not isinstance(system, UnitSystem):
         raise TypeError("system must be a UnitSystem")
-    return _normalize_mapping_level(cast(Mapping[Any, Any], mapping), system, "$", recurse=True)
+    references = _parse_reference_units(reference_units)
+    return _normalize_mapping_level(
+        cast(Mapping[Any, Any], mapping), system, "$", recurse=True, references=references
+    )

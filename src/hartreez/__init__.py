@@ -13,6 +13,7 @@ from hartreez.dimensions import Dimensions
 from hartreez.errors import (
     IncompatibleUnitsError,
     MappingConversionError,
+    ReferenceUnitsError,
     UnitError,
     UnitSyntaxError,
     UnitSystemError,
@@ -56,6 +57,7 @@ __all__ = [
     "Dimensions",
     "IncompatibleUnitsError",
     "MappingConversionError",
+    "ReferenceUnitsError",
     "Unit",
     "UnitError",
     "UnitSyntaxError",
