@@ -35,19 +35,18 @@ def test_console_script_converts_numerically_and_verbosely(console_script: Path)
     result = run_cli(console_script, "convert", "1", "eV", "Ha")
     assert result.returncode == 0
     assert result.stderr == ""
-    assert float(result.stdout) == pytest.approx(0.03674932217565499)
+    assert float(result.stdout) == pytest.approx(0.03674932217606127, rel=1e-14)
 
     verbose = run_cli(console_script, "convert", "1", "eV", "Ha", "--verbose")
     assert verbose.returncode == 0
     assert verbose.stderr == ""
-    assert "1 eV =" in verbose.stdout
-    assert verbose.stdout.rstrip().endswith("Ha")
+    assert verbose.stdout == "1 eV = 0.0367493221760613 Ha\n"
 
 
 def test_console_script_queries_factors_and_constants(console_script: Path) -> None:
     factor = run_cli(console_script, "factor", "eV")
     assert factor.returncode == 0
-    assert float(factor.stdout) == pytest.approx(0.03674932217565499)
+    assert float(factor.stdout) == pytest.approx(0.03674932217606127, rel=1e-14)
 
     constant = run_cli(console_script, "constant", "HBAR")
     assert constant.returncode == 0
@@ -112,4 +111,4 @@ def test_console_script_does_not_import_optional_frameworks(
     result = run_cli(console_script, "convert", "1", "eV", "Ha", env=env)
     assert result.returncode == 0
     assert result.stderr == ""
-    assert float(result.stdout) == pytest.approx(0.03674932217565499)
+    assert float(result.stdout) == pytest.approx(0.03674932217606127, rel=1e-14)
