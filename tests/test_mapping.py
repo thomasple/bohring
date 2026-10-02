@@ -150,7 +150,7 @@ def test_reference_units_accept_bare_top_level_names() -> None:
     converted = convert_mapping(
         {"dt[fs]": 0.5, "qtb": {"tseg[ps]": 2.0}},
         au,
-        reference_units={"dt": "ps", "/qtb/tseg": "fs"},
+        reference_units={"dt": "ps", "qtb/tseg": "fs"},
     )
 
     assert converted["dt"] == pytest.approx(0.5 * au.FS)
@@ -189,6 +189,16 @@ def test_reference_paths_escape_slashes_and_tildes_in_field_names() -> None:
         {"group/name~1": {"dt[fs]": 1.0}},
         au,
         reference_units={"/group~1name~01/dt": "ps"},
+    )
+
+    assert result["group/name~1"]["dt"] == pytest.approx(au.FS)
+
+
+def test_slashless_pointer_uses_json_pointer_escapes_for_slashes_in_field_names() -> None:
+    result = convert_mapping(
+        {"group/name~1": {"dt[fs]": 1.0}},
+        au,
+        reference_units={"group~1name~01/dt": "ps"},
     )
 
     assert result["group/name~1"]["dt"] == pytest.approx(au.FS)

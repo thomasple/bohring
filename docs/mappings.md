@@ -65,14 +65,13 @@ assert config["dt"] == 0.0005
 assert config["other_dt"] == 1.0
 ```
 
-Bare reference keys name top-level fields, while keys beginning with `/` are
-absolute JSON Pointers to **normalized** field paths. Nested mappings use one
-token per key;
+Reference keys are JSON Pointers to **normalized** field paths, and the
+leading `/` may be omitted. Nested mappings use one token per key;
 `~` and `/` within a key are escaped as `~0` and `~1`, respectively. For
-example, `{"/left/dt": "fs", "/right/dt": "ps"}` gives same-named fields
+example, `{"left/dt": "fs", "right/dt": "ps"}` gives same-named fields
 different expectations, and a key literally named `group/name~1` is written
-as `/group~1name~01`. In a list or tuple of mappings, include its zero-based
-index as a token, such as `/replicas/0/dt`.
+as `group~1name~01`. In a list or tuple of mappings, include its zero-based
+index as a token, such as `replicas/0/dt`.
 
 Reference paths address string mapping keys and zero-based list or tuple
 indices. Python mappings can contain non-string keys, but JSON Pointer does

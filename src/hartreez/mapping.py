@@ -30,23 +30,20 @@ def parse_reference_units(reference_units: Mapping[str, str] | None) -> dict[str
     if raw is None:
         return {}
     if not isinstance(raw, Mapping):
-        raise ReferenceUnitsError(
-            "reference_units must be a mapping of field names or JSON Pointer paths to unit expressions"
-        )
+        raise ReferenceUnitsError("reference_units must be a mapping of JSON Pointer paths to unit expressions")
 
     parsed: dict[str, _Reference] = {}
     for raw_path, expression in cast(Mapping[Any, Any], raw).items():
         if not isinstance(raw_path, str) or not raw_path:
             raise ReferenceUnitsError(
-                f"invalid reference path {raw_path!r}; expected a top-level field name or an absolute JSON Pointer"
+                f"invalid reference path {raw_path!r}; expected a non-empty JSON Pointer path"
             )
         if raw_path.startswith("/"):
             path = raw_path
         else:
-            # Bare names are shorthand for one top-level object key. Escape
-            # the same reserved characters used by JSON Pointer tokens.
-            escaped = raw_path.replace("~", "~0").replace("/", "~1")
-            path = f"/{escaped}"
+            # JSON Pointer paths may omit their leading slash. The remaining
+            # tokens and their ~0/~1 escapes keep the same meaning.
+            path = f"/{raw_path}"
         # JSON Pointer permits only these two escapes. Reject malformed paths
         # early so a typo cannot silently leave a field without validation.
         index = 0
@@ -272,9 +269,9 @@ def convert_mapping(mapping: Any, system: Any, *, reference_units: Any = None) -
     array-like values are passed through ``value * float_factor`` so numerical
     frameworks can participate without becoming dependencies of this package.
 
-    ``reference_units`` optionally maps bare top-level field names or
-    normalized JSON Pointer paths to expected dimensions. For example,
-    ``{"dt": "fs", "/simulation/dt": "fs"}``. Pointers
+    ``reference_units`` optionally maps JSON Pointer paths to expected
+    dimensions; the leading slash may be omitted. For example,
+    ``{"dt": "fs", "simulation/dt": "fs"}``. Pointers
     address string mapping keys and zero-based list/tuple indices. References
     below any non-string mapping key are not addressable and are ignored there,
     since JSON Pointer cannot distinguish that key from a string key with the
