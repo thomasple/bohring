@@ -1,0 +1,84 @@
+import pytest
+
+from hartreez import Dimensions, IncompatibleUnitsError, UnknownUnitError, convert, parse_unit, unit_names
+
+
+@pytest.mark.parametrize(
+    ("name", "canonical"),
+    [
+        ("1", "1"), ("kg", "kg"), ("g", "g"), ("Da", "Da"),
+        ("m", "m"), ("cm", "cm"), ("mm", "mm"), ("km", "km"), ("nm", "nm"),
+        ("angstrom", "angstrom"), ("bohr", "bohr"),
+        ("s", "s"), ("ms", "ms"), ("us", "us"), ("ns", "ns"),
+        ("ps", "ps"), ("fs", "fs"), ("atomic_time", "atomic_time"),
+        ("C", "C"), ("e", "e"), ("K", "K"), ("J", "J"),
+        ("eV", "eV"), ("meV", "meV"), ("Hartree", "Hartree"),
+        ("Rydberg", "Rydberg"), ("cal", "cal"), ("kcal", "kcal"),
+        ("kJ", "kJ"), ("Hz", "Hz"), ("THz", "THz"),
+        ("cm^-1", "cm^-1"), ("Pa", "Pa"), ("bar", "bar"),
+        ("kbar", "kbar"), ("atm", "atm"), ("GPa", "GPa"),
+        ("N", "N"), ("nN", "nN"), ("D", "D"), ("mol", "mol"),
+        ("min", "min"), ("h", "h"),
+        ("meter", "m"), ("centimeter", "cm"), ("kilometer", "km"), ("nanometer", "nm"),
+        ("Å", "angstrom"), ("Angstrom", "angstrom"), ("a0", "bohr"),
+        ("a_0", "bohr"), ("second", "s"), ("femtosecond", "fs"),
+        ("picosecond", "ps"), ("nanosecond", "ns"),
+        ("atomic_unit_of_time", "atomic_time"), ("aut", "atomic_time"),
+        ("coulomb", "C"), ("elementary_charge", "e"), ("kelvin", "K"),
+        ("joule", "J"), ("electronvolt", "eV"),
+        ("Hartree_energy", "Hartree"), ("Ha", "Hartree"), ("Ry", "Rydberg"),
+        ("cal_th", "cal"), ("kcal_th", "kcal"), ("kilocalorie", "kcal"),
+        ("kilojoule", "kJ"), ("atomic_mass_unit", "Da"), ("amu", "Da"),
+        ("u", "Da"), ("hertz", "Hz"), ("terahertz", "THz"),
+        ("cm1", "cm^-1"), ("pascal", "Pa"), ("atmosphere", "atm"),
+        ("newton", "N"), ("debye", "D"),
+    ],
+)
+def test_every_registered_name_resolves_to_documented_unit(name: str, canonical: str) -> None:
+    assert parse_unit(name) == parse_unit(canonical)
+    assert name in unit_names()
+
+
+def test_registry_names_are_exact_and_case_sensitive() -> None:
+    assert len(unit_names()) == len(set(unit_names()))
+    for unsupported in ("angstroms", "kPa", "EV", "dalton", "CM1"):
+        with pytest.raises(UnknownUnitError):
+            parse_unit(unsupported)
+
+
+def test_mole_scaling_gives_molar_energy_particle_energy_dimensions() -> None:
+    assert parse_unit("mol").dimensions == Dimensions()
+    assert parse_unit("kcal/mol").dimensions == parse_unit("J").dimensions
+    assert parse_unit("kJ/mol").dimensions == parse_unit("J").dimensions
+    assert convert(1.0, "eV", "kcal/mol") == pytest.approx(23.0605478306, rel=2e-11)
+    assert convert(1.0, "Hartree", "kJ/mol") == pytest.approx(2625.49963948, rel=2e-11)
+
+
+def test_spectroscopic_inverse_centimeter_is_special_in_compounds() -> None:
+    spectroscopy = parse_unit("cm^-1")
+    assert spectroscopy.dimensions == Dimensions(time=-1)
+    assert parse_unit("cm1") == spectroscopy
+    assert parse_unit("cm^-1/s").dimensions == Dimensions(time=-2)
+    assert parse_unit("(cm1)*s").dimensions == Dimensions()
+    assert parse_unit("1/cm").dimensions == Dimensions(length=-1)
+    assert parse_unit("cm**-1").dimensions == Dimensions(length=-1)
+    assert parse_unit("(cm)^-1").dimensions == Dimensions(length=-1)
+    with pytest.raises(IncompatibleUnitsError):
+        convert(1.0, "cm^-1", "1/cm")
+
+
+def test_dalton_debye_and_derived_atomic_units_use_reference_scales() -> None:
+    from hartreez import constants
+
+    assert constants.M_U == pytest.approx(1.66053906892e-27, rel=1e-14)
+    assert parse_unit("Da").scale == constants.M_U
+    assert parse_unit("bohr").scale == pytest.approx(5.29177210544e-11, rel=2e-10)
+    assert parse_unit("Hartree").scale == pytest.approx(4.359744722206e-18, rel=2e-10)
+    assert parse_unit("atomic_time").scale == pytest.approx(2.4188843265864e-17, rel=2e-10)
+    assert parse_unit("D").scale == pytest.approx(3.33564095198152e-30, rel=1e-14)
+    assert convert(1.0, "D", "e*bohr") == pytest.approx(0.3934302697868, rel=2e-10)
+
+
+def test_trailing_whitespace_is_accepted() -> None:
+    assert parse_unit("m   ") == parse_unit("m")
+    assert parse_unit("  kcal / mol  ") == parse_unit("kcal/mol")
