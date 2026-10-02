@@ -52,8 +52,12 @@ def test_mole_scaling_gives_molar_energy_particle_energy_dimensions() -> None:
     assert parse_unit("mol").dimensions == Dimensions()
     assert parse_unit("kcal/mol").dimensions == parse_unit("J").dimensions
     assert parse_unit("kJ/mol").dimensions == parse_unit("J").dimensions
-    assert convert(1.0, "eV", "kcal/mol") == pytest.approx(23.0605478306, rel=2e-12)
-    assert convert(1.0, "Hartree", "kJ/mol") == pytest.approx(2625.49963945, rel=2e-12)
+    assert convert(1.0, "eV", "kcal/mol") == pytest.approx(23.06054783061903, rel=1e-14)
+    # Independent CODATA 2022 Hartree value and exact Avogadro count.
+    expected_hartree_kj_per_mol = 4.3597447222060e-18 * 6.02214076e23 / 1000
+    assert convert(1.0, "Hartree", "kJ/mol") == pytest.approx(
+        expected_hartree_kj_per_mol, rel=2e-11
+    )
 
 
 def test_cm1_is_spectroscopic_and_geometric_powers_remain_geometric() -> None:
@@ -84,11 +88,13 @@ def test_dalton_debye_and_derived_atomic_units_use_reference_scales() -> None:
 
     assert constants.M_U == pytest.approx(1.66053906892e-27, rel=1e-14)
     assert parse_unit("Da").scale == constants.M_U
-    assert parse_unit("bohr").scale == pytest.approx(5.2917721054674e-11, rel=1e-13)
-    assert parse_unit("Hartree").scale == pytest.approx(4.3597447221589e-18, rel=1e-13)
-    assert parse_unit("atomic_time").scale == pytest.approx(2.41888432661246e-17, rel=1e-13)
+    # CODATA gives these derived values at higher precision than the rounded
+    # ALPHA and M_E inputs used here; this tolerance covers their input rounding.
+    assert parse_unit("bohr").scale == pytest.approx(5.29177210544e-11, rel=2e-11)
+    assert parse_unit("Hartree").scale == pytest.approx(4.3597447222060e-18, rel=2e-11)
+    assert parse_unit("atomic_time").scale == pytest.approx(2.4188843265864e-17, rel=2e-11)
     assert parse_unit("D").scale == pytest.approx(3.33564095198152e-30, rel=1e-14)
-    assert convert(1.0, "D", "e*bohr") == pytest.approx(0.39343026978477, rel=1e-13)
+    assert convert(1.0, "D", "e*bohr") == pytest.approx(0.3934302697868, rel=2e-11)
 
 
 def test_trailing_whitespace_is_accepted() -> None:

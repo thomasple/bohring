@@ -83,8 +83,9 @@ def test_atomic_system_conversion_direction_and_identities() -> None:
     assert au.factor_from("e") == pytest.approx(1.0)
     assert au.factor_from("K") == pytest.approx(1.0)
     assert au.mass.scale == pytest.approx(9.1093837139e-31)
-    assert 1.0 * au.EV == pytest.approx(0.0367493221760613, rel=1e-14)
-    assert 1.0 * au.ANGSTROM == pytest.approx(1.889726125898, rel=1e-13)
+    # Compare against CODATA 2022 table values; tolerances cover rounded inputs.
+    assert 1.0 * au.EV == pytest.approx(1 / 27.211386245981, rel=2e-11)
+    assert 1.0 * au.ANGSTROM == pytest.approx(1 / 0.529177210544, rel=2e-11)
     assert au.EV == au.factor_from("eV")
     assert au.ANGSTROM == au.factor_from("angstrom")
     assert au.HARTREE == au.factor_from("Hartree") == au.HA

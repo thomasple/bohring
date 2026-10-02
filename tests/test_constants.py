@@ -37,7 +37,8 @@ def test_constant_source_values_and_dimensions() -> None:
     assert constants.CONSTANTS["ALPHA"].dimensions == Dimensions()
     assert constants.CONSTANTS["N_A"].dimensions == Dimensions()
     assert constants.HBAR == pytest.approx(constants.PLANCK / (2 * 3.141592653589793))
-    assert constants.EPSILON_0 == pytest.approx(8.85418781884006e-12, rel=1e-14)
+    # Independent CODATA 2022 value; tolerance accounts for rounded ALPHA.
+    assert constants.EPSILON_0 == pytest.approx(8.8541878188e-12, rel=2e-11)
     assert constants.K_E == pytest.approx(1 / (4 * 3.141592653589793 * constants.EPSILON_0))
 
 
@@ -51,6 +52,18 @@ def test_atomic_unit_constant_identities_and_electromagnetic_constants() -> None
     assert au.ALPHA == pytest.approx(constants.ALPHA)
     assert au.K_E == pytest.approx(1.0)
     assert au.EPSILON_0 == pytest.approx(1.0 / (4.0 * 3.141592653589793))
+
+
+def test_derived_atomic_constants_share_source_inputs() -> None:
+    assert constants.BOHR_RADIUS == pytest.approx(
+        constants.HBAR / (constants.M_E * constants.C_LIGHT * constants.ALPHA), rel=1e-15
+    )
+    assert constants.HARTREE_ENERGY == pytest.approx(
+        constants.ALPHA**2 * constants.M_E * constants.C_LIGHT**2, rel=1e-15
+    )
+    assert constants.ATOMIC_TIME == pytest.approx(
+        constants.HBAR / constants.HARTREE_ENERGY, rel=1e-15
+    )
 
 
 def test_md_boltzmann_constant_and_nontrivial_dimensional_conversion() -> None:
