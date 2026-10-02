@@ -1,8 +1,8 @@
 # hartreez
 
 Small, dependency-free unit parsing and conversion for ordinary numerical code.
-The first release provides immutable dimensions and units, a small SI registry,
-and direct conversion without quantity wrappers.
+The first release provides immutable dimensions and units, a curated atomistic
+and MD registry, and direct conversion without quantity wrappers.
 
 ## Parse and inspect units
 
@@ -25,9 +25,11 @@ or `**`, followed by a signed integer (`m^-2`), a finite decimal
 explicit: `kg m` is invalid. Numeric coefficients other than the unit literal
 `1` are invalid. Names are case-sensitive. Parsed expressions are cached.
 
-The initial registered vocabulary is `1`, `kg`, `g`, `m`, `cm`, `mm`, `km`,
-`s`, `ms`, `us`, `ns`, `min`, `h`, `C`, `K`, `J`, `N`, and `Pa`. It covers the
-five independent dimensions and representative derived SI dimensions.
+The curated registry includes SI and atomistic units such as `angstrom`,
+`bohr`, `fs`, `ps`, `eV`, `Hartree`, `Rydberg`, `Da`, `D`, and `kcal/mol`.
+Its full list of canonical spellings, aliases, conventions, and constant
+provenance is in [the unit vocabulary reference](docs/units.md). Spectroscopic
+`cm^-1` is inverse time; `1/cm` and `cm**-1` are geometric inverse length.
 Unregistered names and malformed expressions raise `UnitSyntaxError`, with
 `UnknownUnitError` identifying unknown names specifically.
 

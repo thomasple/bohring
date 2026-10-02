@@ -9,13 +9,15 @@ from fractions import Fraction
 from hartreez.errors import UnitSyntaxError, UnknownUnitError
 from hartreez.units import UNIT_REGISTRY, Unit
 
-_TOKEN = re.compile(r"\s*(\*\*|[*/^()]|[A-Za-z_][A-Za-z_0-9]*|[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:/[+-]?\d+)?)")
+_TOKEN = re.compile(r"\s*(cm\^-1|\*\*|[*/^()]|(?:[^\W\d]\w*|_[\w]*)|[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:/[+-]?\d+)?)")
 
 
 def _tokens(expression: str) -> list[str]:
     result: list[str] = []
     position = 0
     while position < len(expression):
+        if expression[position:].isspace():
+            break
         match = _TOKEN.match(expression, position)
         if match is None:
             raise UnitSyntaxError(f"invalid unit expression at character {position}: {expression!r}")
