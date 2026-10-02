@@ -75,7 +75,7 @@ makes molar energy conversion ordinary dimensional conversion:
 from hartreez import convert
 
 convert(1.0, "eV", "kcal/mol")       # about 23.0605478306
-convert(1.0, "Hartree", "kJ/mol")   # about 2625.49963948
+convert(1.0, "Hartree", "kJ/mol")   # about 2625.49963945
 ```
 
 The public Avogadro count is dimensionless; `mol` does not introduce a new

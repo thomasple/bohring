@@ -52,14 +52,14 @@ def test_mole_scaling_gives_molar_energy_particle_energy_dimensions() -> None:
     assert parse_unit("mol").dimensions == Dimensions()
     assert parse_unit("kcal/mol").dimensions == parse_unit("J").dimensions
     assert parse_unit("kJ/mol").dimensions == parse_unit("J").dimensions
-    assert convert(1.0, "eV", "kcal/mol") == pytest.approx(23.0605478306, rel=2e-11)
-    assert convert(1.0, "Hartree", "kJ/mol") == pytest.approx(2625.49963948, rel=2e-11)
+    assert convert(1.0, "eV", "kcal/mol") == pytest.approx(23.0605478306, rel=2e-12)
+    assert convert(1.0, "Hartree", "kJ/mol") == pytest.approx(2625.49963945, rel=2e-12)
 
 
 def test_cm1_is_spectroscopic_and_geometric_powers_remain_geometric() -> None:
     spectroscopy = parse_unit("cm1")
     assert spectroscopy.dimensions == Dimensions(time=-1)
-    assert convert(1.0, "cm1", "THz") == pytest.approx(0.0299792458, rel=1e-10)
+    assert convert(1.0, "cm1", "THz") == pytest.approx(0.0299792458, rel=1e-14)
     assert parse_unit("cm1/s").dimensions == Dimensions(time=-2)
     assert parse_unit("(cm1)*s").dimensions == Dimensions()
     assert parse_unit("1/cm").dimensions == Dimensions(length=-1)
@@ -84,11 +84,11 @@ def test_dalton_debye_and_derived_atomic_units_use_reference_scales() -> None:
 
     assert constants.M_U == pytest.approx(1.66053906892e-27, rel=1e-14)
     assert parse_unit("Da").scale == constants.M_U
-    assert parse_unit("bohr").scale == pytest.approx(5.29177210544e-11, rel=2e-10)
-    assert parse_unit("Hartree").scale == pytest.approx(4.359744722206e-18, rel=2e-10)
-    assert parse_unit("atomic_time").scale == pytest.approx(2.4188843265864e-17, rel=2e-10)
+    assert parse_unit("bohr").scale == pytest.approx(5.2917721054674e-11, rel=1e-13)
+    assert parse_unit("Hartree").scale == pytest.approx(4.3597447221589e-18, rel=1e-13)
+    assert parse_unit("atomic_time").scale == pytest.approx(2.41888432661246e-17, rel=1e-13)
     assert parse_unit("D").scale == pytest.approx(3.33564095198152e-30, rel=1e-14)
-    assert convert(1.0, "D", "e*bohr") == pytest.approx(0.3934302697868, rel=2e-10)
+    assert convert(1.0, "D", "e*bohr") == pytest.approx(0.39343026978477, rel=1e-13)
 
 
 def test_trailing_whitespace_is_accepted() -> None:

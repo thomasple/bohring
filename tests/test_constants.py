@@ -37,7 +37,7 @@ def test_constant_source_values_and_dimensions() -> None:
     assert constants.CONSTANTS["ALPHA"].dimensions == Dimensions()
     assert constants.CONSTANTS["N_A"].dimensions == Dimensions()
     assert constants.HBAR == pytest.approx(constants.PLANCK / (2 * 3.141592653589793))
-    assert constants.EPSILON_0 == pytest.approx(8.8541878188e-12, rel=2e-10)
+    assert constants.EPSILON_0 == pytest.approx(8.85418781884006e-12, rel=1e-14)
     assert constants.K_E == pytest.approx(1 / (4 * 3.141592653589793 * constants.EPSILON_0))
 
 
@@ -55,7 +55,7 @@ def test_atomic_unit_constant_identities_and_electromagnetic_constants() -> None
 
 def test_md_boltzmann_constant_and_nontrivial_dimensional_conversion() -> None:
     md = UnitSystem(length="angstrom", time="ps", energy="kcal/mol")
-    assert md.K_B == pytest.approx(0.00198720425864083, rel=2e-12)
+    assert md.K_B == pytest.approx(0.00198720425864083, rel=1e-14)
     assert md.C_LIGHT == pytest.approx(2_997_924.58)
     assert md.M_E == pytest.approx(constants.M_E / md.mass.scale)
     assert md.E_CHARGE == pytest.approx(1.0)
