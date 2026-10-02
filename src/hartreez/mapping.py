@@ -21,7 +21,7 @@ def _pointer_child(path: str, component: object) -> str:
     return f"{path}/{escaped}"
 
 
-def _parse_reference_units(reference_units: Mapping[str, str] | None) -> dict[str, _Reference]:
+def parse_reference_units(reference_units: Mapping[str, str] | None) -> dict[str, _Reference]:
     """Parse and validate the complete schema before inspecting input values."""
 
     raw: Any = reference_units
@@ -137,7 +137,7 @@ def _scale_value(value: Any, factor: float, path: str, original_key: str) -> Any
         ) from exc
 
 
-def _normalize_mapping_level(
+def normalize_mapping_level(
     mapping: Mapping[Any, Any],
     system: UnitSystem,
     path: str,
@@ -214,7 +214,7 @@ def _normalize_unannotated(
     pointer: str,
 ) -> Any:
     if isinstance(value, Mapping):
-        return _normalize_mapping_level(
+        return normalize_mapping_level(
             cast(Mapping[Any, Any], value), system, path, recurse=True,
             references=references, pointer=pointer
         )
@@ -264,7 +264,7 @@ def convert_mapping(mapping: Any, system: Any, *, reference_units: Any = None) -
         raise TypeError("mapping must implement collections.abc.Mapping")
     if not isinstance(system, UnitSystem):
         raise TypeError("system must be a UnitSystem")
-    references = _parse_reference_units(reference_units)
-    return _normalize_mapping_level(
+    references = parse_reference_units(reference_units)
+    return normalize_mapping_level(
         cast(Mapping[Any, Any], mapping), system, "$", recurse=True, references=references
     )
