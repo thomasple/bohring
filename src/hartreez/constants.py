@@ -71,3 +71,9 @@ CONSTANTS: Mapping[str, PhysicalConstant] = MappingProxyType(
         "K_E": PhysicalConstant(K_E, _ENERGY * _LENGTH / (_CHARGE**2)),
     }
 )
+
+
+def constant_names() -> tuple[str, ...]:
+    """Return the curated physical constant names alphabetically."""
+
+    return tuple(sorted(CONSTANTS))

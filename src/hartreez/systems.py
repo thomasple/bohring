@@ -139,6 +139,20 @@ class UnitSystem:
         constant = constants.CONSTANTS[name]
         return float(constant.value / self._dims_scale(constant.dimensions, self._scales))
 
+    def constant(self, name: str) -> float:
+        """Return a named physical constant expressed in this unit system.
+
+        Constant names are case-sensitive and are listed by
+        :func:`hartreez.constant_names`.
+        """
+
+        if type(name) is not str:
+            raise TypeError("constant name must be a string")
+        try:
+            return self._physical_constant(name)
+        except KeyError as error:
+            raise ValueError(f"unknown physical constant {name!r}") from error
+
     @property
     def K_B(self) -> float:
         return self._physical_constant("K_B")

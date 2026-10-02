@@ -162,3 +162,15 @@ def unit_names() -> tuple[str, ...]:
     """Return all registered canonical spellings and aliases alphabetically."""
 
     return tuple(sorted(UNIT_REGISTRY))
+
+
+def canonical_unit_names() -> tuple[str, ...]:
+    """Return the curated canonical unit spellings alphabetically."""
+
+    return tuple(sorted(_CANONICAL))
+
+
+def unit_aliases() -> Mapping[str, str]:
+    """Return the read-only mapping from aliases to canonical unit spellings."""
+
+    return MappingProxyType(_ALIASES)
