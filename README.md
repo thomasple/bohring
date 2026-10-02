@@ -52,3 +52,29 @@ The public value types are `Dimensions` and `Unit`. They are immutable; a
 `Unit` stores its positive finite SI scale as `scale` and its dimensions as
 `dimensions`. The parser registry is read-only at runtime. `unit_names()` lists
 the registered names.
+
+## Coherent working systems
+
+Create a system by supplying exactly three mechanical units. The fourth is
+derived from `E = M L^2 / T^2`; charge defaults to elementary charge and
+temperature to kelvin.
+
+```python
+from hartreez import UnitSystem, au
+
+md = UnitSystem(length="angstrom", time="ps", energy="kcal/mol")
+energy_in_md_units = md.to_internal(2.0, "eV")
+distance_in_md_units = md.to_internal(1.0, "nm")
+
+# Convenience attributes are floats: one eV expressed in Hartree, and one Å
+# expressed in bohr. Multiply external values by these factors.
+energy_in_hartree = 2.0 * au.EV
+distance_in_bohr = 1.0 * au.ANGSTROM
+```
+
+`factor_from(unit)` returns one external unit in the active system and
+`factor_to(unit)` returns its reciprocal. `to_internal` and `from_internal`
+apply those factors by scalar multiplication. Compound expressions are
+supported without predefined quantity categories, for example
+`md.factor_from("Da*angstrom/ps")`. Systems and their mechanical unit values
+are immutable. Importing `au` requires only the standard-library-backed core.

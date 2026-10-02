@@ -15,3 +15,7 @@ class UnknownUnitError(UnitSyntaxError):
 
 class IncompatibleUnitsError(UnitError):
     """A conversion was requested between different dimensions."""
+
+
+class UnitSystemError(UnitError):
+    """A coherent working unit system could not be constructed."""
