@@ -5,6 +5,28 @@ registered directly; prefixes are never inferred. `parse_unit()` accepts
 these names in products and quotients, so expressions such as `kcal/mol`,
 `eV/angstrom`, and `Da*angstrom/ps` need no extra registrations.
 
+## Unit expressions and direct conversion
+
+Use `parse_unit()` to inspect a unit or `convert()` to convert a scalar or an
+array-like value between compatible units:
+
+```python
+from hartreez import convert, parse_unit
+
+force = parse_unit("kg*m/s^2")
+assert force.dimensions == parse_unit("N").dimensions
+energy_kcal_per_mol = convert(1.0, "eV", "kcal/mol")
+```
+
+Expressions use registered names, the dimensionless literal `1`, explicit
+products (`*`) and quotients (`/`), parentheses, and powers using `^` or `**`.
+Powers may be signed integers (`m^-2`), finite decimals (`m^0.5`), or rational
+exponents (`m^1/2`, `m^-3/2`). Multiplication is explicit (`kg*m`, not
+`kg m`); numeric coefficients other than `1` are not supported. Names are
+case-sensitive. Parsed expressions are cached. Unknown names and malformed
+expressions raise `UnitSyntaxError` (with `UnknownUnitError` for unknown
+names); `convert()` raises `IncompatibleUnitsError` when dimensions differ.
+
 ## Registered spellings
 
 The first spelling in each row is canonical. All following spellings are
@@ -50,6 +72,8 @@ with scale `N_A`, so `kcal/mol` and `kJ/mol` retain energy dimensions. This
 makes molar energy conversion ordinary dimensional conversion:
 
 ```python
+from hartreez import convert
+
 convert(1.0, "eV", "kcal/mol")       # about 23.0605478306
 convert(1.0, "Hartree", "kJ/mol")   # about 2625.49963948
 ```

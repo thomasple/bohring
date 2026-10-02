@@ -1,12 +1,9 @@
 # hartreez
 
-Small, dependency-free unit parsing and conversion for ordinary numerical code.
-The first release provides immutable dimensions and units, a curated atomistic
-and MD registry, and direct conversion without quantity wrappers.
-
-**Conversion convention:** a named unit attribute is one unit expressed in the
-current `UnitSystem`. Multiply an input value by that factor to convert it
-into the system. For example, `value_in_hartree = value_in_eV * au.EV`.
+`hartreez` provides unit conversion and coherent working systems for atomistic
+calculations. Convert lengths, energies, forces, and other quantities using
+familiar units such as angstrom, bohr, eV, and Hartree. Values remain ordinary
+numbers and arrays, with no quantity wrappers or core runtime dependencies.
 
 ## Install
 
@@ -14,93 +11,120 @@ into the system. For example, `value_in_hartree = value_in_eV * au.EV`.
 pip install hartreez
 ```
 
-The core package has no runtime dependencies. Install the optional Pydantic v2
-integration with `pip install 'hartreez[pydantic]'`.
+Requires Python 3.10 or newer. For optional Pydantic v2 input validation:
 
-## Parse and inspect units
-
-```python
-from hartreez import parse_unit
-
-force = parse_unit("kg*m/s^2")
-assert force.dimensions == parse_unit("N").dimensions
+```sh
+pip install 'hartreez[pydantic]'
 ```
 
-`Dimensions` tracks exact rational exponents for mass (`M`), length (`L`),
-time (`T`), charge (`Q`), and temperature (`Θ`). Energy is derived as
-`kg*m^2/s^2`; other dimensions such as momentum, force, pressure, diffusion,
-and dipole moment follow from the same algebra.
+## Work in atomic units
 
-Expressions use registered names, the dimensionless literal `1`, explicit
-products (`*`) and quotients (`/`), parentheses, and powers. A power uses `^`
-or `**`, followed by a signed integer (`m^-2`), a finite decimal
-(`m^0.5`), or a rational literal (`m^1/2`, `m^-3/2`). Multiplication is always
-explicit: `kg m` is invalid. Numeric coefficients other than the unit literal
-`1` are invalid. Names are case-sensitive. Parsed expressions are cached.
-
-The curated registry includes SI and atomistic units such as `angstrom`,
-`bohr`, `fs`, `ps`, `eV`, `Hartree`, `Rydberg`, `Da`, `D`, and `kcal/mol`.
-Its full list of canonical spellings, aliases, conventions, and constant
-provenance is in [the unit vocabulary reference](docs/units.md). Spectroscopic
-`cm^-1` is inverse time; `1/cm` and `cm**-1` are geometric inverse length.
-Unregistered names and malformed expressions raise `UnitSyntaxError`, with
-`UnknownUnitError` identifying unknown names specifically.
-
-## Convert values
+Choose a working system, convert input values into it, and express results in
+the units you need. The built-in `au` system uses bohr for length and Hartree
+for energy:
 
 ```python
-from hartreez import convert
+from hartreez import au
 
-distance_in_cm = convert(1.25, "m", "cm")
-energy = convert(1.0, "J", "kg*m^2/s^2")
+energy_eV = 1.25
+force_eV_per_angstrom = -0.4
+
+energy_au = energy_eV * au.EV
+force_au = au.to_internal(force_eV_per_angstrom, "eV/angstrom")
+
+# Express values from the working system in external units.
+energy_out_eV = au.from_internal(energy_au, "eV")
+force_out_eV_per_angstrom = au.from_internal(force_au, "eV/angstrom")
 ```
 
-`convert(value, from_unit, to_unit)` requires equal dimensions and multiplies
-the supplied value by a Python float. This keeps ordinary scalar types and
-array-like objects in control of their own arithmetic. Incompatible dimensions
-raise `IncompatibleUnitsError`, distinct from parsing errors. `Unit` values
-returned by `parse_unit` can also be passed in place of either expression.
+Factors are ordinary floats; a named factor is one external unit expressed
+in the active system, so multiply the external value by it. `to_internal`
+multiplies by this factor; `from_internal` applies its reciprocal.
+Array-like inputs keep control of their arithmetic through scalar
+multiplication; the core neither imports nor coerces NumPy, PyTorch, or other
+array libraries.
 
-The public value types are `Dimensions` and `Unit`. They are immutable; a
-`Unit` stores its positive finite SI scale as `scale` and its dimensions as
-`dimensions`. The parser registry is read-only at runtime. `unit_names()` lists
-the registered names.
+## Choose a working system
 
-## Coherent working systems
-
-Create a system by supplying exactly three mechanical units. The fourth is
-derived from `E = M L^2 / T^2`; charge defaults to elementary charge and
-temperature to kelvin.
+Define a coherent system by choosing exactly three mechanical units from
+length, time, energy, and mass. `hartreez` derives the fourth using
+`E = M L^2 / T^2`. For example, choose angstrom, picosecond, and kcal/mol;
+mass is derived:
 
 ```python
-from hartreez import UnitSystem, au
+from hartreez import UnitSystem
 
-md = UnitSystem(length="angstrom", time="ps", energy="kcal/mol")
-energy_in_md_units = md.to_internal(2.0, "eV")
-distance_in_md_units = md.to_internal(1.0, "nm")
+units = UnitSystem(length="angstrom", time="ps", energy="kcal/mol")
 
-# Convenience attributes are floats: one eV expressed in Hartree, and one Å
-# expressed in bohr. Multiply external values by these factors.
-energy_in_hartree = 2.0 * au.EV
-distance_in_bohr = 1.0 * au.ANGSTROM
+energy = units.to_internal(2.0, "eV")
+time_ps = units.to_internal(0.5, "fs")
+energy_out_eV = units.from_internal(energy, "eV")
+thermal_energy = 300.0 * units.K_B  # kcal/mol at 300 K
 ```
 
-`factor_from(unit)` returns one external unit in the active system and
-`factor_to(unit)` returns its reciprocal. `to_internal` and `from_internal`
-apply those factors by scalar multiplication. Compound expressions are
-supported without predefined quantity categories, for example
-`md.factor_from("Da*angstrom/ps")`. Systems and their mechanical unit values
-are immutable. Importing `au` requires only the standard-library-backed core.
+`units.K_B` is Boltzmann's constant in this system. Other physical constants,
+such as `au.HBAR`, are available on the corresponding system as ordinary
+floats; see [physical constants](docs/constants.md).
 
-## More features
+## Unit conventions
 
-- Physical constants such as `md.K_B` and `au.HBAR` are exposed in the active
-  system; see [constants](docs/constants.md).
-- Recursively convert annotated mapping fields and validate optional nested
-  reference dimensions with [`convert_mapping`](docs/mappings.md).
-- Add optional Pydantic v2 field-dimension validation with
-  [the Pydantic integration](docs/pydantic.md).
-- Convert values or inspect units and constants from the shell with the
-  [command-line interface](docs/cli.md).
-- Browse supported unit names, aliases, and conventions in the
-  [unit vocabulary](docs/units.md).
+- `mol` represents Avogadro's particle count and is dimensionless, so
+  `kcal/mol` and `kJ/mol` are energy units.
+- Spectroscopic `cm^-1` is treated as inverse time, with the angular-frequency
+  convention `omega = 2*pi*c*wavenumber`. Use `1/cm` for geometric inverse
+  length.
+
+See the [unit reference](docs/units.md) for supported names, expression syntax,
+and details of these conventions.
+
+## Convert mappings
+
+Convert unit-annotated values in an input mapping into your working system:
+
+```python
+from hartreez import UnitSystem, convert_mapping
+
+units = UnitSystem(length="angstrom", time="ps", energy="kcal/mol")
+inputs = convert_mapping({"time[fs]": 0.5, "energy[eV]": 2.0}, units)
+assert inputs["time"] == 0.0005
+```
+
+See [mapping conversion](docs/mappings.md) for nested data and dimensional
+checks.
+
+## Validate inputs with Pydantic
+
+If you use Pydantic to describe calculation inputs, the optional integration
+converts unit-annotated values and checks their dimensions before validating
+field types and constraints. Define your input model with `UnitAwareModel`
+and supply the working system when validating:
+
+```python
+from typing import Annotated
+
+from hartreez import UnitDimension, au
+from hartreez.pydantic import UnitAwareModel
+
+
+class CalculationInput(UnitAwareModel):
+    energy: Annotated[float, UnitDimension("eV")]
+
+
+inputs = CalculationInput.model_validate(
+    {"energy[eV]": 2.0}, context={"unit_system": au}
+)
+```
+
+Here, `UnitDimension("eV")` requires an energy value, and the supplied `au`
+system makes `inputs.energy` a value in Hartree. See the
+[Pydantic integration guide](docs/pydantic.md) for nested models and validation
+details.
+
+## Use the command line
+
+```sh
+hartreez convert 1 eV Ha --verbose
+```
+
+See the [CLI guide](docs/cli.md) for unit factors, constants, and vocabulary
+queries.
