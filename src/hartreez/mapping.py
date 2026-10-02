@@ -30,14 +30,23 @@ def parse_reference_units(reference_units: Mapping[str, str] | None) -> dict[str
     if raw is None:
         return {}
     if not isinstance(raw, Mapping):
-        raise ReferenceUnitsError("reference_units must be a mapping of JSON Pointer paths to unit expressions")
+        raise ReferenceUnitsError(
+            "reference_units must be a mapping of field names or JSON Pointer paths to unit expressions"
+        )
 
     parsed: dict[str, _Reference] = {}
-    for path, expression in cast(Mapping[Any, Any], raw).items():
-        if not isinstance(path, str) or not path.startswith("/"):
+    for raw_path, expression in cast(Mapping[Any, Any], raw).items():
+        if not isinstance(raw_path, str) or not raw_path:
             raise ReferenceUnitsError(
-                f"invalid reference path {path!r}; expected an absolute JSON Pointer such as '/dt'"
+                f"invalid reference path {raw_path!r}; expected a top-level field name or an absolute JSON Pointer"
             )
+        if raw_path.startswith("/"):
+            path = raw_path
+        else:
+            # Bare names are shorthand for one top-level object key. Escape
+            # the same reserved characters used by JSON Pointer tokens.
+            escaped = raw_path.replace("~", "~0").replace("/", "~1")
+            path = f"/{escaped}"
         # JSON Pointer permits only these two escapes. Reject malformed paths
         # early so a typo cannot silently leave a field without validation.
         index = 0
@@ -50,14 +59,14 @@ def parse_reference_units(reference_units: Mapping[str, str] | None) -> dict[str
                 index += 1
         if not isinstance(expression, str):
             raise ReferenceUnitsError(
-                f"invalid reference definition at {path}: expected a unit expression string, "
+                f"invalid reference definition at {raw_path}: expected a unit expression string, "
                 f"got {type(expression).__name__}"
             )
         try:
             unit = parse_unit(expression)
         except (UnitError, TypeError) as exc:
             raise ReferenceUnitsError(
-                f"invalid reference unit expression {expression!r} at {path}: {exc}"
+                f"invalid reference unit expression {expression!r} at {raw_path}: {exc}"
             ) from exc
         if path in parsed:
             raise ReferenceUnitsError(f"duplicate reference path {path!r}")
@@ -263,8 +272,9 @@ def convert_mapping(mapping: Any, system: Any, *, reference_units: Any = None) -
     array-like values are passed through ``value * float_factor`` so numerical
     frameworks can participate without becoming dependencies of this package.
 
-    ``reference_units`` optionally maps normalized JSON Pointer paths (for
-    example ``{"/simulation/dt": "fs"}``) to expected dimensions. Pointers
+    ``reference_units`` optionally maps bare top-level field names or
+    normalized JSON Pointer paths to expected dimensions. For example,
+    ``{"dt": "fs", "/simulation/dt": "fs"}``. Pointers
     address string mapping keys and zero-based list/tuple indices. References
     below any non-string mapping key are not addressable and are ignored there,
     since JSON Pointer cannot distinguish that key from a string key with the

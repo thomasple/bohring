@@ -14,7 +14,7 @@ result, in the destination unit. For example:
 ```sh
 hartreez convert 1 eV Ha
 hartreez convert 1 'kcal/mol' eV
-hartreez convert 1 'cm^-1' THz
+hartreez convert 1 cm1 THz
 ```
 
 Use `--verbose` (or `-v`) for a readable equality:
@@ -25,8 +25,9 @@ hartreez convert 1 eV Ha --verbose
 ```
 
 Products, quotients, and powers work in either unit argument. For example,
-`hartreez convert 1 'eV/angstrom' 'Hartree/bohr'`. Spectroscopic `cm^-1` uses
-hartreez's inverse-time convention; `1/cm` remains reciprocal length.
+`hartreez convert 1 'eV/angstrom' 'Hartree/bohr'`. Spectroscopic `cm1` means
+cyclic frequency (`f = c*wavenumber`); `1/cm` and `cm^-1` are geometric
+reciprocal length.
 
 ## Query atomic-unit values
 

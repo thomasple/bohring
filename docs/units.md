@@ -55,7 +55,7 @@ explicit aliases and have the same scale and dimensions.
 | Kilojoule | `kJ` | `kilojoule` | Exactly `1000 J` |
 | Frequency | `Hz` | `hertz` | `s^-1` |
 | Terahertz | `THz` | `terahertz` | Exactly `1e12 Hz` |
-| Spectroscopic inverse centimeter | `cm^-1` | `cm1` | Special scale `2 pi c * 100 s^-1`; see below |
+| Spectroscopic inverse centimeter | `cm1` | — | Scale `c * 100 Hz`; see below |
 | Pressure | `Pa`, `bar`, `kbar`, `atm`, `GPa` | `pascal`, `atmosphere` | `1 bar = 1e5 Pa`, `1 kbar = 1e8 Pa`, `1 atm = 101325 Pa`, `1 GPa = 1e9 Pa` |
 | Force | `N`, `nN` | `newton` | SI newton; nanonewton is exactly `1e-9 N` |
 | Dipole | `D` | `debye` | `1e-21/c C m` under the Debye definition |
@@ -116,13 +116,12 @@ converts Å values to bohr by multiplication.
 
 ## Spectroscopic inverse centimeters
 
-Only the exact registered spellings `cm^-1` and `cm1` have the spectroscopy
-interpretation. Their scale is `2 pi c * 100` inverse seconds, for
-`omega = 2 pi c * wavenumber`. In the parser, the contiguous token `cm^-1`
-is recognized as that named spectroscopy unit, including in expressions such
-as `cm^-1/s`. Write geometric reciprocal length as `1/cm`, `cm**-1`, or
-`(cm)^-1`; these have inverse-length dimensions. A spectroscopic
-`cm^-1` cannot convert to geometric `1/cm`.
+The exact registered spelling `cm1` is spectroscopic wavenumber represented
+as cyclic frequency, with scale `c * 100 Hz`. Thus one `cm1` converts to
+`0.0299792458 THz`; multiply by `2*pi` separately when angular frequency is
+needed. The spelling `cm^-1` follows ordinary unit algebra and has geometric
+inverse-length dimensions, as do `1/cm`, `cm**-1`, and `(cm)^-1`. Powers such
+as `cm^-1/2` and `cm^-10` are geometric fractional and integer powers.
 
 ## Constant provenance
 

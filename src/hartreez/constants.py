@@ -32,7 +32,7 @@ HARTREE_ENERGY = ALPHA**2 * M_E * C_LIGHT**2  # J
 ATOMIC_TIME = HBAR / HARTREE_ENERGY  # s
 RYDBERG_ENERGY = HARTREE_ENERGY / 2.0  # J
 DEBYE = 1.0e-21 / C_LIGHT  # C m; exact SI conversion under definition
-SPECTROSCOPIC_CM1 = 2.0 * pi * C_LIGHT * 100.0  # s^-1
+SPECTROSCOPIC_CM1 = C_LIGHT * 100.0  # Hz per cm^-1 of wavenumber
 
 # Dimensions use the package's independent SI bases M, L, T, Q, and Θ.
 _MASS = Dimensions(mass=1)

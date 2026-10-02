@@ -9,7 +9,7 @@ from fractions import Fraction
 from hartreez.errors import UnitSyntaxError, UnknownUnitError
 from hartreez.units import UNIT_REGISTRY, Unit
 
-_TOKEN = re.compile(r"\s*(cm\^-1|\*\*|[*/^()]|(?:[^\W\d]\w*|_[\w]*)|[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:/[+-]?\d+)?)")
+_TOKEN = re.compile(r"\s*(\*\*|[*/^()]|(?:[^\W\d]\w*|_[\w]*)|[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:/[+-]?\d+)?)")
 
 
 def _tokens(expression: str) -> list[str]:

@@ -70,9 +70,9 @@ floats; see [physical constants](docs/constants.md).
 
 - `mol` represents Avogadro's particle count and is dimensionless, so
   `kcal/mol` and `kJ/mol` are energy units.
-- Spectroscopic `cm^-1` is treated as inverse time, with the angular-frequency
-  convention `omega = 2*pi*c*wavenumber`. Use `1/cm` for geometric inverse
-  length.
+- Spectroscopic `cm1` is cyclic frequency (`f = c*wavenumber`). Use `1/cm`
+  or `cm^-1` for geometric inverse length; multiply by `2*pi` when angular
+  frequency is needed.
 
 See the [unit reference](docs/units.md) for supported names, expression syntax,
 and details of these conventions.

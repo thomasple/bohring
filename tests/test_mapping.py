@@ -146,6 +146,17 @@ def test_reference_units_validate_dimensions_without_selecting_conversion_target
     assert converted["free"] == pytest.approx(2.0)
 
 
+def test_reference_units_accept_bare_top_level_names() -> None:
+    converted = convert_mapping(
+        {"dt[fs]": 0.5, "qtb": {"tseg[ps]": 2.0}},
+        au,
+        reference_units={"dt": "ps", "/qtb/tseg": "fs"},
+    )
+
+    assert converted["dt"] == pytest.approx(0.5 * au.FS)
+    assert converted["qtb"]["tseg"] == pytest.approx(2.0 * au.PS)
+
+
 def test_reference_mismatch_reports_path_expressions_and_dimensions() -> None:
     md = UnitSystem(length="angstrom", time="ps", energy="kcal/mol")
 
@@ -208,7 +219,7 @@ def test_reference_units_accept_arbitrary_compound_dimensions() -> None:
     "references",
     [
         {"/missing": "fortnight"},
-        {"missing": "fs"},
+        {"": "fs"},
         {"/missing": 1},
         {"/bad~escape": "fs"},
         [],
@@ -217,3 +228,8 @@ def test_reference_units_accept_arbitrary_compound_dimensions() -> None:
 def test_invalid_reference_schema_fails_even_when_field_is_absent(references: Any) -> None:
     with pytest.raises(ReferenceUnitsError):
         convert_mapping({}, au, reference_units=references)
+
+
+def test_reference_units_reject_equivalent_bare_and_pointer_paths() -> None:
+    with pytest.raises(ReferenceUnitsError, match="duplicate reference path"):
+        convert_mapping({}, au, reference_units={"dt": "fs", "/dt": "ps"})

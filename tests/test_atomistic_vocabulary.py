@@ -1,3 +1,5 @@
+from fractions import Fraction
+
 import pytest
 
 from hartreez import Dimensions, IncompatibleUnitsError, UnknownUnitError, convert, parse_unit, unit_names
@@ -15,7 +17,7 @@ from hartreez import Dimensions, IncompatibleUnitsError, UnknownUnitError, conve
         ("eV", "eV"), ("meV", "meV"), ("Hartree", "Hartree"),
         ("Rydberg", "Rydberg"), ("cal", "cal"), ("kcal", "kcal"),
         ("kJ", "kJ"), ("Hz", "Hz"), ("THz", "THz"),
-        ("cm^-1", "cm^-1"), ("Pa", "Pa"), ("bar", "bar"),
+        ("cm1", "cm1"), ("Pa", "Pa"), ("bar", "bar"),
         ("kbar", "kbar"), ("atm", "atm"), ("GPa", "GPa"),
         ("N", "N"), ("nN", "nN"), ("D", "D"), ("mol", "mol"),
         ("min", "min"), ("h", "h"),
@@ -30,7 +32,7 @@ from hartreez import Dimensions, IncompatibleUnitsError, UnknownUnitError, conve
         ("cal_th", "cal"), ("kcal_th", "kcal"), ("kilocalorie", "kcal"),
         ("kilojoule", "kJ"), ("atomic_mass_unit", "Da"), ("amu", "Da"),
         ("u", "Da"), ("hertz", "Hz"), ("terahertz", "THz"),
-        ("cm1", "cm^-1"), ("pascal", "Pa"), ("atmosphere", "atm"),
+        ("pascal", "Pa"), ("atmosphere", "atm"),
         ("newton", "N"), ("debye", "D"),
     ],
 )
@@ -54,17 +56,27 @@ def test_mole_scaling_gives_molar_energy_particle_energy_dimensions() -> None:
     assert convert(1.0, "Hartree", "kJ/mol") == pytest.approx(2625.49963948, rel=2e-11)
 
 
-def test_spectroscopic_inverse_centimeter_is_special_in_compounds() -> None:
-    spectroscopy = parse_unit("cm^-1")
+def test_cm1_is_spectroscopic_and_geometric_powers_remain_geometric() -> None:
+    spectroscopy = parse_unit("cm1")
     assert spectroscopy.dimensions == Dimensions(time=-1)
-    assert parse_unit("cm1") == spectroscopy
-    assert parse_unit("cm^-1/s").dimensions == Dimensions(time=-2)
+    assert convert(1.0, "cm1", "THz") == pytest.approx(0.0299792458, rel=1e-10)
+    assert parse_unit("cm1/s").dimensions == Dimensions(time=-2)
     assert parse_unit("(cm1)*s").dimensions == Dimensions()
     assert parse_unit("1/cm").dimensions == Dimensions(length=-1)
+    assert parse_unit("cm^-1").dimensions == Dimensions(length=-1)
+    assert parse_unit("cm^-1") == parse_unit("1/cm")
     assert parse_unit("cm**-1").dimensions == Dimensions(length=-1)
     assert parse_unit("(cm)^-1").dimensions == Dimensions(length=-1)
+    assert parse_unit("cm^-10").dimensions == Dimensions(length=-10)
+    assert parse_unit("cm^-1/2").dimensions == Dimensions(length=Fraction(-1, 2))
+    assert parse_unit("cm^-1.5").dimensions == Dimensions(length=Fraction(-3, 2))
+    assert parse_unit("(cm)^-1/2").dimensions == Dimensions(length=Fraction(-1, 2))
     with pytest.raises(IncompatibleUnitsError):
-        convert(1.0, "cm^-1", "1/cm")
+        convert(1.0, "cm1", "1/cm")
+
+
+def test_cm_inverse_combines_as_geometric_length() -> None:
+    assert parse_unit("cm^-1/s").dimensions == Dimensions(length=-1, time=-1)
 
 
 def test_dalton_debye_and_derived_atomic_units_use_reference_scales() -> None:

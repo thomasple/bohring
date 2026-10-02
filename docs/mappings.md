@@ -59,14 +59,15 @@ md = UnitSystem(length="angstrom", time="ps", energy="kcal/mol")
 config = convert_mapping(
     {"dt[fs]": 0.5, "other_dt[ps]": 1.0},
     md,
-    reference_units={"/dt": "fs", "/other_dt": "fs"},
+    reference_units={"dt": "fs", "other_dt": "fs"},
 )
 assert config["dt"] == 0.0005
 assert config["other_dt"] == 1.0
 ```
 
-Reference keys are absolute JSON Pointers to **normalized** field paths, so
-the first path token begins with `/`. Nested mappings use one token per key;
+Bare reference keys name top-level fields, while keys beginning with `/` are
+absolute JSON Pointers to **normalized** field paths. Nested mappings use one
+token per key;
 `~` and `/` within a key are escaped as `~0` and `~1`, respectively. For
 example, `{"/left/dt": "fs", "/right/dt": "ps"}` gives same-named fields
 different expectations, and a key literally named `group/name~1` is written

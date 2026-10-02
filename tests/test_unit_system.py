@@ -93,7 +93,7 @@ def test_atomic_system_conversion_direction_and_identities() -> None:
     assert au.KJPERMOL == au.factor_from("kJ/mol")
     assert au.DEBYE == au.factor_from("D")
     assert au.THZ == au.factor_from("THz")
-    assert au.CM1 == au.factor_from("cm^-1")
+    assert au.CM1 == au.factor_from("cm1")
     for name, expression in (("ATM", "atm"), ("BAR", "bar"), ("GPA", "GPa"), ("PA", "Pa"), ("NEWTON", "N"), ("NN", "nN")):
         assert getattr(au, name) == au.factor_from(expression)
 

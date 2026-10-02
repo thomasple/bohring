@@ -247,7 +247,7 @@ class UnitSystem:
 
     @property
     def CM1(self) -> float:
-        return self._convenience("cm^-1")
+        return self._convenience("cm1")
 
     @property
     def ATM(self) -> float:
