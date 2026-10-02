@@ -3,8 +3,7 @@
 `hartreez` uses an explicit, case-sensitive registry; prefixes are never
 inferred. `parse_unit()` accepts registered names in products and quotients,
 so expressions such as `kcal/mol`, `eV/angstrom`, and `Da*angstrom/ps` need no
-extra registrations. For example, `parse_unit("kcalpermol")` and
-`parse_unit("kcal/mol")` return equivalent units.
+extra registrations.
 
 ## Unit expressions and direct conversion
 
