@@ -31,6 +31,59 @@ For example, a positive-value constraint sees the converted internal value.
 The model validator removes annotated key suffixes at the current model level
 only; nested models validate their own mappings and inherit Pydantic's context.
 
+### Nested models
+
+Nested models and lists of nested models use the same validation context. Each
+model converts only its own annotated fields, so the same leaf name can have a
+different dimension in another model:
+
+```python
+from typing import Annotated
+
+from pydantic import Field
+
+from hartreez import UnitDimension, UnitSystem
+from hartreez.pydantic import UnitAwareModel
+
+
+class ParticleInput(UnitAwareModel):
+    mass: Annotated[float, UnitDimension("Da")] = Field(gt=0)
+    momentum: Annotated[float, UnitDimension("Da*angstrom/ps")]
+
+
+class SimulationInput(UnitAwareModel):
+    timestep: Annotated[float, UnitDimension("fs")] = Field(gt=0)
+    energy: Annotated[float, UnitDimension("eV")]
+    particle: ParticleInput
+    particles: list[ParticleInput]
+
+
+md = UnitSystem(length="angstrom", time="ps", energy="kcal/mol")
+config = SimulationInput.model_validate(
+    {
+        "timestep[fs]": 100.0,
+        "energy[eV]": 2.0,
+        "particle": {
+            "mass[kg]": 1.0,
+            "momentum[eV*ps/angstrom]": 3.0,
+        },
+        "particles": [
+            {"mass[Da]": 12.0, "momentum[Da*angstrom/ps]": 4.0},
+        ],
+    },
+    context={"unit_system": md},
+)
+```
+
+The parent converts its timestep and energy; each `ParticleInput` converts its
+mass and momentum. For example, `energy` expects energy while `mass` expects
+mass, even though both are processed with the same `UnitSystem`. Conversion
+happens before the models' field constraints and validators run. The input
+mapping is left unchanged. Already canonical nested input can be validated
+without context, while an annotated key at any nesting depth requires the
+context. Pydantic reports the enclosing model field and, for list items, the
+list index in the error location (for example `particle` or `particles.0`).
+
 ## Declare dimensions
 
 `UnitDimension` accepts any supported unit expression, including compounds
