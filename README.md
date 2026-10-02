@@ -4,6 +4,19 @@ Small, dependency-free unit parsing and conversion for ordinary numerical code.
 The first release provides immutable dimensions and units, a curated atomistic
 and MD registry, and direct conversion without quantity wrappers.
 
+**Conversion convention:** a named unit attribute is one unit expressed in the
+current `UnitSystem`. Multiply an input value by that factor to convert it
+into the system. For example, `value_in_hartree = value_in_eV * au.EV`.
+
+## Install
+
+```sh
+pip install hartreez
+```
+
+The core package has no runtime dependencies. Install the optional Pydantic v2
+integration with `pip install 'hartreez[pydantic]'`.
+
 ## Parse and inspect units
 
 ```python
@@ -78,3 +91,16 @@ apply those factors by scalar multiplication. Compound expressions are
 supported without predefined quantity categories, for example
 `md.factor_from("Da*angstrom/ps")`. Systems and their mechanical unit values
 are immutable. Importing `au` requires only the standard-library-backed core.
+
+## More features
+
+- Physical constants such as `md.K_B` and `au.HBAR` are exposed in the active
+  system; see [constants](docs/constants.md).
+- Recursively convert annotated mapping fields and validate optional nested
+  reference dimensions with [`convert_mapping`](docs/mappings.md).
+- Add optional Pydantic v2 field-dimension validation with
+  [the Pydantic integration](docs/pydantic.md).
+- Convert values or inspect units and constants from the shell with the
+  [command-line interface](docs/cli.md).
+- Browse supported unit names, aliases, and conventions in the
+  [unit vocabulary](docs/units.md).

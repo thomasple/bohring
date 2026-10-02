@@ -14,9 +14,11 @@ from hartreez.units import Unit
 _Reference = tuple[str, Unit]
 
 
-def _pointer_child(path: str, component: object) -> str:
-    """Extend an RFC 6901 JSON Pointer with one string or array-index token."""
+def _pointer_child(path: str | None, component: str | int) -> str | None:
+    """Extend a reference path, or keep it unavailable below a non-string key."""
 
+    if path is None:
+        return None
     escaped = str(component).replace("~", "~0").replace("/", "~1")
     return f"{path}/{escaped}"
 
@@ -144,7 +146,7 @@ def normalize_mapping_level(
     *,
     recurse: bool,
     references: Mapping[str, _Reference] | None = None,
-    pointer: str = "",
+    pointer: str | None = "",
 ) -> dict[Any, Any]:
     """Normalize one mapping level; ``recurse`` is a seam for shallow clients."""
 
@@ -169,7 +171,9 @@ def normalize_mapping_level(
     normalized: dict[Any, Any] = {}
     for canonical, value, original_path, expression, original_key in entries:
         target_path = _path_child(path, canonical)
-        target_pointer = _pointer_child(pointer, canonical)
+        # JSON Pointer has no type information for object keys. Support string
+        # mapping keys and array indices; do not alias e.g. key 1 with key "1".
+        target_pointer = _pointer_child(pointer, canonical) if isinstance(canonical, str) else None
         if expression is not None:
             if original_key is None:
                 raise RuntimeError("annotated mapping entry has no original key")
@@ -180,7 +184,11 @@ def normalize_mapping_level(
                     f"invalid unit expression {expression!r} in key {original_key!r} "
                     f"at {original_path}: {exc}"
                 ) from exc
-            reference = references.get(target_pointer) if references is not None else None
+            reference = (
+                references.get(target_pointer)
+                if references is not None and target_pointer is not None
+                else None
+            )
             if reference is not None:
                 reference_expression, reference_unit = reference
                 if unit.dimensions != reference_unit.dimensions:
@@ -211,7 +219,7 @@ def _normalize_unannotated(
     system: UnitSystem,
     path: str,
     references: Mapping[str, _Reference] | None,
-    pointer: str,
+    pointer: str | None,
 ) -> Any:
     if isinstance(value, Mapping):
         return normalize_mapping_level(
@@ -256,8 +264,12 @@ def convert_mapping(mapping: Any, system: Any, *, reference_units: Any = None) -
     frameworks can participate without becoming dependencies of this package.
 
     ``reference_units`` optionally maps normalized JSON Pointer paths (for
-    example ``{"/simulation/dt": "fs"}``) to expected dimensions. References
-    are validation-only; annotated values are still converted into ``system``.
+    example ``{"/simulation/dt": "fs"}``) to expected dimensions. Pointers
+    address string mapping keys and zero-based list/tuple indices. References
+    below any non-string mapping key are not addressable and are ignored there,
+    since JSON Pointer cannot distinguish that key from a string key with the
+    same spelling. References are validation-only; annotated values are still
+    converted into ``system``.
     """
 
     if not isinstance(mapping, Mapping):

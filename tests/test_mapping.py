@@ -183,6 +183,17 @@ def test_reference_paths_escape_slashes_and_tildes_in_field_names() -> None:
     assert result["group/name~1"]["dt"] == pytest.approx(au.FS)
 
 
+def test_reference_path_does_not_alias_integer_and_string_mapping_keys() -> None:
+    result = convert_mapping(
+        {1: {"dt[eV]": 1.0}, "1": {"dt[fs]": 1.0}},
+        au,
+        reference_units={"/1/dt": "fs"},
+    )
+
+    assert result[1]["dt"] == pytest.approx(au.EV)
+    assert result["1"]["dt"] == pytest.approx(au.FS)
+
+
 def test_reference_units_accept_arbitrary_compound_dimensions() -> None:
     result = convert_mapping(
         {"momentum[Da*angstrom/ps]": 2.0},

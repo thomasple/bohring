@@ -1,7 +1,7 @@
 [project]
 name = "hartreez"
 version = "0.1.0"
-description = "Add your description here"
+description = "Dependency-free atomistic unit conversion for numerical Python code"
 readme = "README.md"
 authors = [
     { name = "Thomas Plé", email = "thomas.ple@sorbonne-universite.fr" }
