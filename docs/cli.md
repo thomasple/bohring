@@ -21,7 +21,7 @@ Use `--verbose` (or `-v`) for a readable equality:
 
 ```sh
 hartreez convert 1 eV Ha --verbose
-# 1 eV = 0.0367493221760613 Ha
+# 1 eV is approximately 0.03675 Ha
 ```
 
 Products, quotients, and powers work in either unit argument. For example,

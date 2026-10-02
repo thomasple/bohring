@@ -7,15 +7,17 @@ retain their stated values in every system; `N_A` is a particle count, matching
 the library's dimensionless `mol` convention.
 
 ```python
+import math
+
 from hartreez import UnitSystem, au
 
 md = UnitSystem(length="angstrom", time="ps", energy="kcal/mol")
 thermal_energy = 300.0 * md.K_B
-one_ev_in_hartree = md.EV  # Unit factors and constants are both floats.
+one_ev_in_kcal_per_mol = md.EV  # Unit factors and constants are both floats.
 
-assert au.HBAR == 1.0
-assert au.M_E == 1.0
-assert au.E_CHARGE == 1.0
+assert math.isclose(au.HBAR, 1.0)
+assert math.isclose(au.M_E, 1.0)
+assert math.isclose(au.E_CHARGE, 1.0)
 ```
 
 ## Public constants
