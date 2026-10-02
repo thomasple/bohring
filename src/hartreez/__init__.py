@@ -12,7 +12,8 @@ from hartreez.dimensions import Dimensions
 from hartreez.errors import IncompatibleUnitsError, UnitError, UnitSyntaxError, UnitSystemError, UnknownUnitError
 from hartreez.parser import parse_unit
 from hartreez.systems import UnitSystem, au
-from hartreez.units import Unit, unit_names
+from hartreez.constants import constant_names
+from hartreez.units import Unit, canonical_unit_names, unit_aliases, unit_names
 
 
 def convert(value: Any, from_unit: str | Unit, to_unit: str | Unit) -> Any:
@@ -35,10 +36,12 @@ def convert(value: Any, from_unit: str | Unit, to_unit: str | Unit) -> Any:
     return value * (source.scale / destination.scale)
 
 
-def main() -> None:
-    """Minimal placeholder console entry point, expanded by the CLI ticket."""
+def main() -> int:
+    """Run the standard-library command line interface."""
 
-    print("hartreez unit parsing and conversion library")
+    from hartreez.cli import main as cli_main
+
+    return cli_main()
 
 
 __all__ = [
@@ -51,8 +54,11 @@ __all__ = [
     "UnitSystemError",
     "UnknownUnitError",
     "au",
+    "canonical_unit_names",
     "convert",
+    "constant_names",
     "main",
     "parse_unit",
+    "unit_aliases",
     "unit_names",
 ]
