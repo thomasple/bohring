@@ -81,7 +81,7 @@ def test_rejects_unsupported_annotated_values_with_context(bad_value: Any) -> No
     assert "dt[fs]" in str(caught.value)
 
 
-@pytest.mark.parametrize("bad_key", ["dt[fs", "dt[]", "[fs]", "dt[fs]tail"])
+@pytest.mark.parametrize("bad_key", ["dt[fs", "dt[]", "[]", "dt[fs]tail"])
 def test_rejects_malformed_annotations_with_original_key_and_path(bad_key: str) -> None:
     with pytest.raises(MappingConversionError, match=r"\$.*" + bad_key.replace("[", r"\[")):
         convert_mapping({bad_key: 1.0}, au)
@@ -229,7 +229,7 @@ def test_reference_units_accept_arbitrary_compound_dimensions() -> None:
     "references",
     [
         {"/missing": "fortnight"},
-        {"": "fs"},
+        {None: "fs"},
         {"/missing": 1},
         {"/bad~escape": "fs"},
         [],
@@ -243,3 +243,9 @@ def test_invalid_reference_schema_fails_even_when_field_is_absent(references: An
 def test_reference_units_reject_equivalent_bare_and_pointer_paths() -> None:
     with pytest.raises(ReferenceUnitsError, match="duplicate reference path"):
         convert_mapping({}, au, reference_units={"dt": "fs", "/dt": "ps"})
+
+
+def test_empty_slashless_path_addresses_an_empty_top_level_key() -> None:
+    converted = convert_mapping({"[fs]": 1.0}, au, reference_units={"": "ps"})
+
+    assert converted[""] == pytest.approx(au.FS)

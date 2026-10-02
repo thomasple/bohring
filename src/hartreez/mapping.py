@@ -34,11 +34,15 @@ def parse_reference_units(reference_units: Mapping[str, str] | None) -> dict[str
 
     parsed: dict[str, _Reference] = {}
     for raw_path, expression in cast(Mapping[Any, Any], raw).items():
-        if not isinstance(raw_path, str) or not raw_path:
+        if not isinstance(raw_path, str):
             raise ReferenceUnitsError(
-                f"invalid reference path {raw_path!r}; expected a non-empty JSON Pointer path"
+                f"invalid reference path {raw_path!r}; expected a JSON Pointer path string"
             )
-        if raw_path.startswith("/"):
+        if raw_path == "":
+            # Reference paths address fields, not the document root. Use the
+            # empty string as the slashless spelling of the empty root key.
+            path = "/"
+        elif raw_path.startswith("/"):
             path = raw_path
         else:
             # JSON Pointer paths may omit their leading slash. The remaining
@@ -91,10 +95,10 @@ def _annotation(key: str, path: str) -> tuple[str, str] | None:
             "expected a terminal '[unit expression]' suffix"
         )
     open_bracket = key.rfind("[")
-    if open_bracket <= 0 or "[" in key[:open_bracket] or "]" in key[:open_bracket]:
+    if open_bracket < 0 or "[" in key[:open_bracket] or "]" in key[:open_bracket]:
         raise MappingConversionError(
             f"malformed unit annotation in key {key!r} at {path}; "
-            "expected a non-empty key followed by one terminal '[unit expression]' suffix"
+            "expected a key followed by one terminal '[unit expression]' suffix"
         )
     expression = key[open_bracket + 1 : -1]
     if not expression.strip():

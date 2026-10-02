@@ -73,6 +73,11 @@ different expectations, and a key literally named `group/name~1` is written
 as `group~1name~01`. In a list or tuple of mappings, include its zero-based
 index as a token, such as `replicas/0/dt`.
 
+The empty path addresses a top-level key whose name is the empty string; use
+`"/"` for the equivalent explicit pointer. An annotated empty-name field is
+written as `"[fs]"`. Reference paths address fields, not the mapping document
+itself.
+
 Reference paths address string mapping keys and zero-based list or tuple
 indices. Python mappings can contain non-string keys, but JSON Pointer does
 not encode mapping-key types. To avoid treating an integer key such as `1` as
