@@ -19,3 +19,7 @@ class IncompatibleUnitsError(UnitError):
 
 class UnitSystemError(UnitError):
     """A coherent working unit system could not be constructed."""
+
+
+class MappingConversionError(UnitError):
+    """A unit-annotated mapping could not be normalized or converted."""
