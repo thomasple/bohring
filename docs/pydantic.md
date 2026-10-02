@@ -109,8 +109,8 @@ the field stores femtoseconds. For a canonical payload whose keys have no
 unit suffix, validation needs no unit-system context:
 
 ```python
-already_internal = SimulationInput.model_validate(
-    {"timestep": 0.0005, "force": 1.0}
+already_internal = HasTime.model_validate(
+    {"elapsed": 0.0005}
 )
 ```
 
