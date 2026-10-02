@@ -6,6 +6,7 @@ import math
 from dataclasses import dataclass, field
 from typing import Any
 
+from hartreez import constants
 from hartreez.dimensions import Dimensions
 from hartreez.errors import UnitSystemError
 from hartreez.parser import parse_unit
@@ -131,6 +132,56 @@ class UnitSystem:
 
     def _convenience(self, expression: str) -> float:
         return self.factor_from(expression)
+
+    def _physical_constant(self, name: str) -> float:
+        """Express an SI constant in this system, preserving dimensionless values."""
+
+        constant = constants.CONSTANTS[name]
+        return float(constant.value / self._dims_scale(constant.dimensions, self._scales))
+
+    @property
+    def K_B(self) -> float:
+        return self._physical_constant("K_B")
+
+    @property
+    def HBAR(self) -> float:
+        return self._physical_constant("HBAR")
+
+    @property
+    def PLANCK(self) -> float:
+        return self._physical_constant("PLANCK")
+
+    @property
+    def C_LIGHT(self) -> float:
+        return self._physical_constant("C_LIGHT")
+
+    @property
+    def ALPHA(self) -> float:
+        return self._physical_constant("ALPHA")
+
+    @property
+    def M_E(self) -> float:
+        return self._physical_constant("M_E")
+
+    @property
+    def M_P(self) -> float:
+        return self._physical_constant("M_P")
+
+    @property
+    def E_CHARGE(self) -> float:
+        return self._physical_constant("E_CHARGE")
+
+    @property
+    def N_A(self) -> float:
+        return self._physical_constant("N_A")
+
+    @property
+    def EPSILON_0(self) -> float:
+        return self._physical_constant("EPSILON_0")
+
+    @property
+    def K_E(self) -> float:
+        return self._physical_constant("K_E")
 
     @property
     def EV(self) -> float:

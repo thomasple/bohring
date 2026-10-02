@@ -5,7 +5,12 @@ constants are kept exact. Derived atomic units share these inputs so that
 their identities remain internally consistent.
 """
 
+from dataclasses import dataclass
 from math import pi
+from types import MappingProxyType
+from typing import Mapping
+
+from hartreez.dimensions import Dimensions
 
 # Exact SI defining constants.
 C_LIGHT = 299_792_458.0  # m s^-1
@@ -29,3 +34,40 @@ RYDBERG_ENERGY = HARTREE_ENERGY / 2.0  # J
 DEBYE = 1.0e-21 / C_LIGHT  # C m; exact SI conversion under definition
 SPECTROSCOPIC_CM1 = 2.0 * pi * C_LIGHT * 100.0  # s^-1
 
+# Dimensions use the package's independent SI bases M, L, T, Q, and Θ.
+_MASS = Dimensions(mass=1)
+_LENGTH = Dimensions(length=1)
+_TIME = Dimensions(time=1)
+_CHARGE = Dimensions(charge=1)
+_TEMPERATURE = Dimensions(temperature=1)
+_ENERGY = _MASS * (_LENGTH**2) / (_TIME**2)
+_DIMENSIONLESS = Dimensions()
+
+EPSILON_0 = E_CHARGE**2 / (4.0 * pi * ALPHA * HBAR * C_LIGHT)  # F m^-1
+K_E = 1.0 / (4.0 * pi * EPSILON_0)  # N m^2 C^-2
+
+
+@dataclass(frozen=True, slots=True)
+class PhysicalConstant:
+    """A central SI value and its physical dimensions."""
+
+    value: float
+    dimensions: Dimensions
+
+
+CONSTANTS: Mapping[str, PhysicalConstant] = MappingProxyType(
+    {
+        "K_B": PhysicalConstant(K_B, _ENERGY / _TEMPERATURE),
+        "HBAR": PhysicalConstant(HBAR, _ENERGY * _TIME),
+        "PLANCK": PhysicalConstant(PLANCK, _ENERGY * _TIME),
+        "C_LIGHT": PhysicalConstant(C_LIGHT, _LENGTH / _TIME),
+        "ALPHA": PhysicalConstant(ALPHA, _DIMENSIONLESS),
+        "M_E": PhysicalConstant(M_E, _MASS),
+        "M_P": PhysicalConstant(M_P, _MASS),
+        "E_CHARGE": PhysicalConstant(E_CHARGE, _CHARGE),
+        # This is a particle count and remains dimensionless in every system.
+        "N_A": PhysicalConstant(N_A, _DIMENSIONLESS),
+        "EPSILON_0": PhysicalConstant(EPSILON_0, (_CHARGE**2) / _ENERGY / _LENGTH),
+        "K_E": PhysicalConstant(K_E, _ENERGY * _LENGTH / (_CHARGE**2)),
+    }
+)
