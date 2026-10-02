@@ -1,0 +1,116 @@
+import subprocess
+import sys
+
+import pytest
+
+from hartreez import Dimensions, Unit, UnitSystem, UnitSystemError, au
+
+
+@pytest.mark.parametrize(
+    ("arguments", "derived_expression"),
+    [
+        ({"mass": "kg", "length": "m", "time": "s"}, "kg*m^2/s^2"),
+        ({"length": "m", "time": "s", "energy": "J"}, "kg"),
+        ({"mass": "kg", "time": "s", "energy": "J"}, "m"),
+        ({"mass": "kg", "length": "m", "energy": "J"}, "s"),
+    ],
+)
+def test_each_three_of_four_constructions(arguments: dict[str, str], derived_expression: str) -> None:
+    system = UnitSystem(**arguments)  # type: ignore[arg-type]
+    assert system.factor_from(derived_expression) == pytest.approx(1.0)
+
+
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        {},
+        {"length": "m"},
+        {"length": "m", "time": "s"},
+        {"length": "m", "time": "s", "energy": "J", "mass": "kg"},
+    ],
+)
+def test_construction_requires_exactly_three_mechanical_units(arguments: dict[str, str]) -> None:
+    with pytest.raises(UnitSystemError, match="exactly three"):
+        UnitSystem(**arguments)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        {"length": "s", "time": "s", "energy": "J"},
+        {"length": "m", "time": "kg", "energy": "J"},
+        {"length": "m", "time": "s", "energy": "kg"},
+        {"length": "m", "time": "s", "energy": "J", "charge": "K"},
+        {"length": "m", "time": "s", "energy": "J", "temperature": "C"},
+    ],
+)
+def test_constructor_rejects_incompatible_dimensions(arguments: dict[str, str]) -> None:
+    with pytest.raises(UnitSystemError, match="must have dimensions"):
+        UnitSystem(**arguments)  # type: ignore[arg-type]
+
+
+def test_conversion_factors_round_trip_and_arbitrary_derived_units() -> None:
+    system = UnitSystem(length="angstrom", time="ps", energy="kcal/mol")
+    expression = "Da*angstrom/ps"
+    factor = system.factor_from(expression)
+    assert type(factor) is float
+    assert system.factor_to(expression) == pytest.approx(1 / factor)
+    converted = system.to_internal(2.5, expression)
+    assert converted == pytest.approx(2.5 * factor)
+    assert system.from_internal(converted, expression) == pytest.approx(2.5)
+    assert system.factor_from("eV/angstrom") == pytest.approx(
+        system.factor_from("eV") / system.factor_from("angstrom")
+    )
+
+
+def test_charge_and_temperature_defaults_and_overrides() -> None:
+    default = UnitSystem(length="m", time="s", energy="J")
+    millikelvin = Unit(1e-3, Dimensions(temperature=1))
+    overridden = UnitSystem(length="m", time="s", energy="J", charge="C", temperature=millikelvin)
+    assert default.factor_from("e") == 1.0
+    assert default.factor_from("C") == pytest.approx(1 / 1.602176634e-19)
+    assert default.factor_from("K") == 1.0
+    assert overridden.factor_from("C") == 1.0
+    assert overridden.factor_from("e") == pytest.approx(1.602176634e-19)
+    assert overridden.factor_from(millikelvin) == 1.0
+    assert overridden.factor_from("K") == pytest.approx(1000.0)
+
+
+def test_atomic_system_conversion_direction_and_identities() -> None:
+    assert au.factor_from("bohr") == pytest.approx(1.0)
+    assert au.factor_from("atomic_time") == pytest.approx(1.0)
+    assert au.factor_from("Hartree") == pytest.approx(1.0)
+    assert au.factor_from("e") == pytest.approx(1.0)
+    assert au.factor_from("K") == pytest.approx(1.0)
+    assert au.mass.scale == pytest.approx(9.1093837139e-31)
+    assert 1.0 * au.EV == pytest.approx(1 / 27.211386245981)
+    assert 1.0 * au.ANGSTROM == pytest.approx(1 / 0.529177210544)
+    assert au.EV == au.factor_from("eV")
+    assert au.ANGSTROM == au.factor_from("angstrom")
+    assert au.HARTREE == au.factor_from("Hartree") == au.HA
+    assert au.DA == au.factor_from("Da")
+    assert au.KCALPERMOL == au.factor_from("kcal/mol")
+    assert au.KJPERMOL == au.factor_from("kJ/mol")
+    assert au.DEBYE == au.factor_from("D")
+    assert au.THZ == au.factor_from("THz")
+    assert au.CM1 == au.factor_from("cm^-1")
+    for name, expression in (("ATM", "atm"), ("BAR", "bar"), ("GPA", "GPa"), ("PA", "Pa"), ("NEWTON", "N"), ("NN", "nN")):
+        assert getattr(au, name) == au.factor_from(expression)
+
+
+def test_unit_system_is_immutable() -> None:
+    with pytest.raises((AttributeError, TypeError)):
+        au.length = au.time  # type: ignore[misc]
+
+
+def test_primary_au_import_loads_no_optional_frameworks() -> None:
+    subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import sys; from hartreez import au; "
+            "assert au.EV > 0; "
+            "assert not {'numpy', 'torch', 'jax', 'pydantic'} & sys.modules.keys()",
+        ],
+        check=True,
+    )

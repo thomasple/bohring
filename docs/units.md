@@ -57,6 +57,39 @@ convert(1.0, "Hartree", "kJ/mol")   # about 2625.49963948
 The public Avogadro count is dimensionless; `mol` does not introduce a new
 amount-of-substance dimension.
 
+## Coherent working systems
+
+`UnitSystem` requires exactly three of `length`, `time`, `energy`, and `mass`.
+The fourth scale is derived from `E = M L^2 / T^2`. Each supplied expression
+must have the matching physical dimension. Charge defaults to `e` and
+temperature defaults to `K`; either can be overridden with a compatible unit.
+
+```python
+from hartreez import UnitSystem, au
+
+md = UnitSystem(length="angstrom", time="ps", energy="kcal/mol")
+force_factor = md.factor_from("eV/angstrom")
+momentum_factor = md.factor_from("Da*angstrom/ps")
+internal_dt = md.to_internal(0.5, "fs")
+external_dt = md.from_internal(internal_dt, "fs")
+
+energy_ha = 3.0 * au.EV
+distance_bohr = 1.25 * au.ANGSTROM
+```
+
+The convention is consistent for all properties: a named unit factor is one
+unit expressed in the active system. `factor_from` and every convenience
+property return Python floats. The convenience properties are `EV`,
+`HARTREE`, `HA`, `ANGSTROM`, `BOHR`, `FS`, `PS`, `DA`, `KCALPERMOL`,
+`KJPERMOL`, `DEBYE`, `THZ`, `CM1`, `ATM`, `BAR`, `GPA`, `PA`, `NEWTON`, and
+`NN`. Every property equals `factor_from` for the corresponding registered
+unit expression.
+
+The predefined `au` uses bohr, atomic time, Hartree, elementary charge, and
+kelvin; electron mass is derived as the coherent mass scale. Thus
+`au.EV` converts eV values to Hartree by multiplication, and `au.ANGSTROM`
+converts Å values to bohr by multiplication.
+
 ## Spectroscopic inverse centimeters
 
 Only the exact registered spellings `cm^-1` and `cm1` have the spectroscopy
