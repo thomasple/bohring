@@ -43,3 +43,42 @@ try:
 except MappingConversionError as error:
     print(error)
 ```
+
+## Validate expected dimensions
+
+Pass an optional `reference_units` mapping to validate the dimensions of
+selected annotated fields. The references do not choose the output units:
+every annotated value is still converted into the supplied `UnitSystem`.
+For example, a timestep annotated in femtoseconds or picoseconds is accepted
+against an `fs` reference, then converted to the system's time unit:
+
+```python
+from hartreez import UnitSystem, convert_mapping
+
+md = UnitSystem(length="angstrom", time="ps", energy="kcal/mol")
+config = convert_mapping(
+    {"dt[fs]": 0.5, "other_dt[ps]": 1.0},
+    md,
+    reference_units={"/dt": "fs", "/other_dt": "fs"},
+)
+assert config["dt"] == 0.0005
+assert config["other_dt"] == 1.0
+```
+
+Reference keys are absolute JSON Pointers to **normalized** field paths, so
+the first path token begins with `/`. Nested mappings use one token per key;
+`~` and `/` within a key are escaped as `~0` and `~1`, respectively. For
+example, `{"/left/dt": "fs", "/right/dt": "ps"}` gives same-named fields
+different expectations, and a key literally named `group/name~1` is written
+as `/group~1name~01`. In a list or tuple of mappings, include its zero-based
+index as a token, such as `/replicas/0/dt`.
+
+Each value is any supported unit expression, including compound expressions
+such as `Da*angstrom/ps`. Only fields with references are checked; other
+annotated values are converted normally, while unannotated values remain in
+the supplied system's units. Every reference definition is parsed before the
+input is traversed, including references to fields absent from the input.
+Invalid paths or unit expressions raise `ReferenceUnitsError` (a schema or
+configuration error). A supplied annotation whose dimensions disagree with
+its reference raises `MappingConversionError` with the normalized path, both
+expressions, and both dimensions.

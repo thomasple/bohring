@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 
-from hartreez import MappingConversionError, UnitSystem, au, convert_mapping
+from hartreez import MappingConversionError, ReferenceUnitsError, UnitSystem, au, convert_mapping
 
 
 def test_converts_scalars_and_nested_lists_and_tuples() -> None:
@@ -130,3 +130,79 @@ def test_accepts_a_non_atomic_unit_system() -> None:
     md = UnitSystem(length="angstrom", time="ps", energy="kcal/mol")
 
     assert convert_mapping({"dt[fs]": 500.0}, md)["dt"] == pytest.approx(0.5)
+
+
+def test_reference_units_validate_dimensions_without_selecting_conversion_target() -> None:
+    md = UnitSystem(length="angstrom", time="ps", energy="kcal/mol")
+
+    converted = convert_mapping(
+        {"dt[fs]": 0.5, "another_dt[ps]": 1.0, "free[angstrom]": 2.0},
+        md,
+        reference_units={"/dt": "fs", "/another_dt": "fs"},
+    )
+
+    assert converted["dt"] == pytest.approx(0.0005)
+    assert converted["another_dt"] == pytest.approx(1.0)
+    assert converted["free"] == pytest.approx(2.0)
+
+
+def test_reference_mismatch_reports_path_expressions_and_dimensions() -> None:
+    md = UnitSystem(length="angstrom", time="ps", energy="kcal/mol")
+
+    with pytest.raises(MappingConversionError) as caught:
+        convert_mapping(
+            {"simulation": {"dt[eV]": 0.5}},
+            md,
+            reference_units={"/simulation/dt": "fs"},
+        )
+
+    message = str(caught.value)
+    assert "/simulation/dt" in message
+    assert "eV" in message and "fs" in message
+    assert "M^1 L^2 T^-2" in message and "T^1" in message
+
+
+def test_reference_paths_distinguish_equal_nested_leaf_names() -> None:
+    result = convert_mapping(
+        {"left": {"value[fs]": 1.0}, "right": {"value[eV]": 1.0}},
+        au,
+        reference_units={"/left/value": "ps", "/right/value": "Hartree"},
+    )
+
+    assert result["left"]["value"] == pytest.approx(au.FS)
+    assert result["right"]["value"] == pytest.approx(au.EV)
+
+
+def test_reference_paths_escape_slashes_and_tildes_in_field_names() -> None:
+    result = convert_mapping(
+        {"group/name~1": {"dt[fs]": 1.0}},
+        au,
+        reference_units={"/group~1name~01/dt": "ps"},
+    )
+
+    assert result["group/name~1"]["dt"] == pytest.approx(au.FS)
+
+
+def test_reference_units_accept_arbitrary_compound_dimensions() -> None:
+    result = convert_mapping(
+        {"momentum[Da*angstrom/ps]": 2.0},
+        au,
+        reference_units={"/momentum": "eV*ps/angstrom"},
+    )
+
+    assert result["momentum"] == pytest.approx(2.0 * au.factor_from("Da*angstrom/ps"))
+
+
+@pytest.mark.parametrize(
+    "references",
+    [
+        {"/missing": "fortnight"},
+        {"missing": "fs"},
+        {"/missing": 1},
+        {"/bad~escape": "fs"},
+        [],
+    ],
+)
+def test_invalid_reference_schema_fails_even_when_field_is_absent(references: Any) -> None:
+    with pytest.raises(ReferenceUnitsError):
+        convert_mapping({}, au, reference_units=references)

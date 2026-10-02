@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Any
 
 from hartreez.dimensions import Dimensions
-from hartreez.errors import IncompatibleUnitsError, MappingConversionError, UnitError, UnitSyntaxError, UnitSystemError, UnknownUnitError
+from hartreez.errors import IncompatibleUnitsError, MappingConversionError, ReferenceUnitsError, UnitError, UnitSyntaxError, UnitSystemError, UnknownUnitError
 from hartreez.mapping import convert_mapping
 from hartreez.parser import parse_unit
 from hartreez.systems import UnitSystem, au
@@ -46,6 +46,7 @@ __all__ = [
     "Dimensions",
     "IncompatibleUnitsError",
     "MappingConversionError",
+    "ReferenceUnitsError",
     "Unit",
     "UnitError",
     "UnitSyntaxError",
