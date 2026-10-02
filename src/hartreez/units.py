@@ -130,6 +130,7 @@ _ALIASES: dict[str, str] = {
     "joule": "J",
     "electronvolt": "eV",
     "ev": "eV",
+    "mev": "meV",
     "Hartree_energy": "Hartree",
     "Ha": "Hartree",
     "Ry": "Rydberg",

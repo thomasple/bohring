@@ -47,7 +47,7 @@ explicit aliases and have the same scale and dimensions.
 | Temperature | `K` | `kelvin` | SI kelvin |
 | Energy | `J` | `joule` | SI joule |
 | Electronvolt | `eV` | `electronvolt`, `ev` | Exact `e joule` |
-| Millielectronvolt | `meV` | — | Exactly `1e-3 eV` |
+| Millielectronvolt | `meV` | `mev` | Exactly `1e-3 eV` |
 | Hartree | `Hartree` | `Hartree_energy`, `Ha` | CODATA 2022 `E_h`, derived as `alpha^2 m_e c^2` |
 | Rydberg | `Rydberg` | `Ry` | Exactly one half Hartree |
 | Thermochemical calorie | `cal` | `cal_th` | Exactly `4.184 J` |
