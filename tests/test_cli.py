@@ -66,6 +66,8 @@ def test_console_script_lists_curated_discovery_data(console_script: Path) -> No
     assert aliases.returncode == 0
     assert "Å -> angstrom" in aliases.stdout
     assert "Ha -> Hartree" in aliases.stdout
+    assert "kcalpermol -> kcal/mol" in aliases.stdout
+    assert "kJpermol -> kJ/mol" in aliases.stdout
 
     constants = run_cli(console_script, "constants")
     assert constants.returncode == 0

@@ -2,7 +2,16 @@ from fractions import Fraction
 
 import pytest
 
-from hartreez import Dimensions, IncompatibleUnitsError, UnknownUnitError, convert, parse_unit, unit_names
+from hartreez import (
+    Dimensions,
+    IncompatibleUnitsError,
+    UnknownUnitError,
+    canonical_unit_names,
+    convert,
+    parse_unit,
+    unit_aliases,
+    unit_names,
+)
 
 
 @pytest.mark.parametrize(
@@ -34,11 +43,21 @@ from hartreez import Dimensions, IncompatibleUnitsError, UnknownUnitError, conve
         ("u", "Da"), ("hertz", "Hz"), ("terahertz", "THz"),
         ("pascal", "Pa"), ("atmosphere", "atm"),
         ("newton", "N"), ("debye", "D"),
+        ("ev", "eV"), ("kcalpermol", "kcal/mol"), ("kJpermol", "kJ/mol"),
     ],
 )
 def test_every_registered_name_resolves_to_documented_unit(name: str, canonical: str) -> None:
     assert parse_unit(name) == parse_unit(canonical)
     assert name in unit_names()
+
+
+def test_composite_aliases_remain_expressions_not_canonical_units() -> None:
+    assert "kcal/mol" not in canonical_unit_names()
+    assert "kJ/mol" not in canonical_unit_names()
+    assert unit_aliases()["kcalpermol"] == "kcal/mol"
+    assert unit_aliases()["kJpermol"] == "kJ/mol"
+    assert convert(1.0, "kcalpermol", "kcal/mol") == pytest.approx(1.0)
+    assert convert(1.0, "kJpermol", "kJ/mol") == pytest.approx(1.0)
 
 
 def test_registry_names_are_exact_and_case_sensitive() -> None:

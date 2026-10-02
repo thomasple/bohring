@@ -129,6 +129,7 @@ _ALIASES: dict[str, str] = {
     "kelvin": "K",
     "joule": "J",
     "electronvolt": "eV",
+    "ev": "eV",
     "Hartree_energy": "Hartree",
     "Ha": "Hartree",
     "Ry": "Rydberg",
@@ -147,10 +148,20 @@ _ALIASES: dict[str, str] = {
     "debye": "D",
 }
 
+# Composite aliases resolve to the values of parsed expressions. They are not
+# canonical units: the canonical registry continues to contain kcal, kJ, and
+# mol as the components of these expressions.
+_EXPRESSION_ALIASES: dict[str, tuple[str, Unit]] = {
+    "kcalpermol": ("kcal/mol", _CANONICAL["kcal"] / _CANONICAL["mol"]),
+    "kJpermol": ("kJ/mol", _CANONICAL["kJ"] / _CANONICAL["mol"]),
+}
+
+
 def _build_registry() -> Mapping[str, Unit]:
     registry = dict(_CANONICAL)
     for alias, canonical_name in _ALIASES.items():
         registry[alias] = _CANONICAL[canonical_name]
+    registry.update({alias: unit for alias, (_, unit) in _EXPRESSION_ALIASES.items()})
     return MappingProxyType(registry)
 
 
@@ -170,6 +181,9 @@ def canonical_unit_names() -> tuple[str, ...]:
 
 
 def unit_aliases() -> Mapping[str, str]:
-    """Return the read-only mapping from aliases to canonical unit spellings."""
+    """Return aliases mapped to canonical spellings or equivalent expressions."""
 
-    return MappingProxyType(_ALIASES)
+    expression_aliases = {
+        alias: expression for alias, (expression, _) in _EXPRESSION_ALIASES.items()
+    }
+    return MappingProxyType(_ALIASES | expression_aliases)

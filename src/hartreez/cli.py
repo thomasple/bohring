@@ -32,7 +32,9 @@ def _parser() -> argparse.ArgumentParser:
     constant.add_argument("name", help="constant name, for example K_B or HBAR")
 
     commands.add_parser("units", help="list canonical unit spellings")
-    commands.add_parser("aliases", help="list aliases and their canonical spellings")
+    commands.add_parser(
+        "aliases", help="list aliases and their canonical spellings or equivalent expressions"
+    )
     commands.add_parser("constants", help="list supported physical constant names")
     return parser
 

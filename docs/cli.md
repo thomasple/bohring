@@ -52,8 +52,9 @@ hartreez constant K_B
 
 The discovery commands print one item per line, sorted alphabetically.
 `units` lists canonical unit spellings, `aliases` lists each accepted alias
-and its canonical spelling, and `constants` lists queryable physical constant
-names. These are curated names, not prefix-generated possibilities.
+and its canonical spelling or equivalent expression, and `constants` lists
+queryable physical constant names. These are curated names, not
+prefix-generated possibilities.
 
 ```sh
 hartreez units
