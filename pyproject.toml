@@ -1,19 +1,20 @@
 [project]
 name = "hartreez"
 version = "0.1.0"
-description = "Add your description here"
+description = "Dependency-free atomistic unit conversion for numerical Python code"
 readme = "README.md"
+license = "MIT"
 authors = [
     { name = "Thomas Plé", email = "thomas.ple@sorbonne-universite.fr" }
 ]
-requires-python = ">=3.13"
+requires-python = ">=3.10"
 dependencies = []
 
 [dependency-groups]
 dev = [
     "pyright>=1.1.414",
     "pytest>=9.1.1",
-    "pydantic>=2.13.5",
+    "pydantic>=2",
 ]
 
 [project.scripts]
@@ -21,7 +22,7 @@ hartreez = "hartreez:main"
 
 [project.optional-dependencies]
 pydantic = [
-    "pydantic>=2.13.5",
+    "pydantic>=2",
 ]
 
 [build-system]
@@ -34,5 +35,5 @@ addopts = "-ra"
 
 [tool.pyright]
 include = ["src", "tests"]
-pythonVersion = "3.13"
+pythonVersion = "3.10"
 typeCheckingMode = "strict"
