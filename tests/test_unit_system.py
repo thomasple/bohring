@@ -104,6 +104,23 @@ def test_unit_system_is_immutable() -> None:
         au.length = au.time  # type: ignore[misc]
 
 
+def test_short_unit_names_in_working_system_and_expressions() -> None:
+    md = UnitSystem(length="ang", time="ns", energy="meV")
+    assert md.ANG == md.ANGSTROM == 1.0
+    assert md.NS == 1.0
+    assert md.NM == pytest.approx(10.0)
+    assert md.RY == pytest.approx(md.HARTREE / 2)
+    assert md.AMU == md.DA
+    assert md.KBAR == pytest.approx(md.BAR * 1000)
+    assert md.factor_from("eV/ang") == md.factor_from("eV/angstrom")
+    assert au.ANG == au.ANGSTROM
+    assert au.NS == pytest.approx(au.PS * 1000)
+    assert au.NM == pytest.approx(au.ANGSTROM * 10)
+    assert au.RY == pytest.approx(0.5)
+    assert au.AMU == au.DA
+    assert au.KBAR == pytest.approx(au.BAR * 1000)
+
+
 def test_primary_au_import_loads_no_optional_frameworks() -> None:
     subprocess.run(
         [

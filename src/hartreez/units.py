@@ -114,6 +114,7 @@ _ALIASES: dict[str, str] = {
     "centimeter": "cm",
     "kilometer": "km",
     "nanometer": "nm",
+    "ang": "angstrom",
     "Å": "angstrom",
     "Angstrom": "angstrom",
     "a0": "bohr",

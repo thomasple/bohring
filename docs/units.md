@@ -38,7 +38,7 @@ explicit aliases and have the same scale and dimensions.
 | Mass | `kg`, `g` | — | SI kilogram; gram is exactly `1e-3 kg` |
 | Atomic mass | `Da` | `atomic_mass_unit`, `amu`, `u` | CODATA 2022 atomic mass constant `m_u`; not proton mass |
 | Length | `m`, `cm`, `mm`, `km`, `nm` | `meter`, `centimeter`, `kilometer`, `nanometer` | Exact SI decimal scales |
-| Angstrom | `angstrom` | `Å`, `Angstrom` | Exactly `1e-10 m` |
+| Angstrom | `angstrom` | `ang`, `Å`, `Angstrom` | Exactly `1e-10 m` |
 | Bohr radius | `bohr` | `a0`, `a_0` | CODATA 2022 `a_0`, derived consistently from shared inputs |
 | Time | `s`, `ms`, `us`, `ns`, `ps`, `fs` | `second`, `nanosecond`, `picosecond`, `femtosecond` | Exact SI decimal scales |
 | Atomic time | `atomic_time` | `atomic_unit_of_time`, `aut` | `hbar / E_h`, using CODATA 2022 derived atomic units |
@@ -99,16 +99,18 @@ internal_dt = md.to_internal(0.5, "fs")
 external_dt = md.from_internal(internal_dt, "fs")
 
 energy_ha = 3.0 * au.EV
-distance_bohr = 1.25 * au.ANGSTROM
+distance_bohr = 1.25 * au.ANG
+pressure_au = 10.0 * au.KBAR
+force_factor = au.factor_from("eV/ang")
 ```
 
 The convention is consistent for all properties: a named unit factor is one
 unit expressed in the active system. `factor_from` and every convenience
 property return Python floats. The convenience properties are `EV`,
-`HARTREE`, `HA`, `ANGSTROM`, `BOHR`, `FS`, `PS`, `DA`, `KCALPERMOL`,
-`KJPERMOL`, `DEBYE`, `THZ`, `CM1`, `ATM`, `BAR`, `GPA`, `PA`, `NEWTON`, and
-`NN`. Every property equals `factor_from` for the corresponding registered
-unit expression.
+`HARTREE`, `HA`, `RY`, `ANGSTROM`, `ANG`, `BOHR`, `NM`, `FS`, `PS`,
+`NS`, `DA`, `AMU`, `KCALPERMOL`, `KJPERMOL`, `DEBYE`, `THZ`, `CM1`, `ATM`,
+`BAR`, `KBAR`, `GPA`, `PA`, `NEWTON`, and `NN`. Every property equals
+`factor_from` for the corresponding registered unit expression.
 
 The predefined `au` uses bohr, atomic time, Hartree, elementary charge, and
 kelvin; electron mass is derived as the coherent mass scale. Thus

@@ -210,12 +210,24 @@ class UnitSystem:
         return self._convenience("Ha")
 
     @property
+    def RY(self) -> float:
+        return self._convenience("Ry")
+
+    @property
     def ANGSTROM(self) -> float:
         return self._convenience("angstrom")
 
     @property
+    def ANG(self) -> float:
+        return self._convenience("ang")
+
+    @property
     def BOHR(self) -> float:
         return self._convenience("bohr")
+
+    @property
+    def NM(self) -> float:
+        return self._convenience("nm")
 
     @property
     def FS(self) -> float:
@@ -226,8 +238,16 @@ class UnitSystem:
         return self._convenience("ps")
 
     @property
+    def NS(self) -> float:
+        return self._convenience("ns")
+
+    @property
     def DA(self) -> float:
         return self._convenience("Da")
+
+    @property
+    def AMU(self) -> float:
+        return self._convenience("amu")
 
     @property
     def KCALPERMOL(self) -> float:
@@ -256,6 +276,10 @@ class UnitSystem:
     @property
     def BAR(self) -> float:
         return self._convenience("bar")
+
+    @property
+    def KBAR(self) -> float:
+        return self._convenience("kbar")
 
     @property
     def GPA(self) -> float:

@@ -31,7 +31,7 @@ from hartreez import (
         ("N", "N"), ("nN", "nN"), ("D", "D"), ("mol", "mol"),
         ("min", "min"), ("h", "h"),
         ("meter", "m"), ("centimeter", "cm"), ("kilometer", "km"), ("nanometer", "nm"),
-        ("Å", "angstrom"), ("Angstrom", "angstrom"), ("a0", "bohr"),
+        ("ang", "angstrom"), ("Å", "angstrom"), ("Angstrom", "angstrom"), ("a0", "bohr"),
         ("a_0", "bohr"), ("second", "s"), ("femtosecond", "fs"),
         ("picosecond", "ps"), ("nanosecond", "ns"),
         ("atomic_unit_of_time", "atomic_time"), ("aut", "atomic_time"),
