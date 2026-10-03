@@ -64,7 +64,7 @@ thermal_energy = 300.0 * units.K_B  # kcal/mol at 300 K
 
 `units.K_B` is Boltzmann's constant in this system. Other physical constants,
 such as `au.HBAR`, are available on the corresponding system as ordinary
-floats; see [physical constants](docs/constants.md).
+floats; see [physical constants](https://github.com/thomasple/hartreez/blob/main/docs/constants.md).
 
 ## Unit conventions
 
@@ -74,7 +74,7 @@ floats; see [physical constants](docs/constants.md).
   or `cm^-1` for geometric inverse length; multiply by `2*pi` when angular
   frequency is needed.
 
-See the [unit reference](docs/units.md) for supported names, expression syntax,
+See the [unit reference](https://github.com/thomasple/hartreez/blob/main/docs/units.md) for supported names, expression syntax,
 and details of these conventions.
 
 ## Convert mappings
@@ -89,7 +89,7 @@ inputs = convert_mapping({"time[fs]": 0.5, "energy[eV]": 2.0}, units)
 assert inputs["time"] == 0.0005
 ```
 
-See [mapping conversion](docs/mappings.md) for nested data and dimensional
+See [mapping conversion](https://github.com/thomasple/hartreez/blob/main/docs/mappings.md) for nested data and dimensional
 checks.
 
 ## Validate inputs with Pydantic
@@ -117,7 +117,7 @@ inputs = CalculationInput.model_validate(
 
 Here, `UnitDimension("eV")` requires an energy value, and the supplied `au`
 system makes `inputs.energy` a value in Hartree. See the
-[Pydantic integration guide](docs/pydantic.md) for nested models and validation
+[Pydantic integration guide](https://github.com/thomasple/hartreez/blob/main/docs/pydantic.md) for nested models and validation
 details.
 
 ## Use the command line
@@ -126,5 +126,5 @@ details.
 hartreez convert 1 eV Ha --verbose
 ```
 
-See the [CLI guide](docs/cli.md) for unit factors, constants, and vocabulary
+See the [CLI guide](https://github.com/thomasple/hartreez/blob/main/docs/cli.md) for unit factors, constants, and vocabulary
 queries.
